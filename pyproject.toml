@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "stateowl"
+version = "0.1.0"
+description = "Focused, provenance-preserving GitHub state reads for AI agents."
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+authors = [{name = "stateOwl contributors"}]
+keywords = ["github", "agents", "context", "state", "llm"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+]
+dependencies = []
+
+[project.scripts]
+stateowl = "stateowl.cli:main"
+
+[project.urls]
+Repository = "https://github.com/repla73/stateOwl"
+Issues = "https://github.com/repla73/stateOwl/issues"
+
+[tool.setuptools.packages.find]
+where = ["src"]

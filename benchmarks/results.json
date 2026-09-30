@@ -1,0 +1,69 @@
+{
+  "cases": [
+    {
+      "api_calls": 4,
+      "bytes_returned": 2411,
+      "model_context_bytes": 2364,
+      "strategy": "naive",
+      "unrelated_records": 0
+    },
+    {
+      "api_calls": 3,
+      "bytes_returned": 2382,
+      "model_context_bytes": 573,
+      "strategy": "focused",
+      "unrelated_records": 0
+    },
+    {
+      "api_calls": 14,
+      "bytes_returned": 6081,
+      "model_context_bytes": 5664,
+      "strategy": "naive",
+      "unrelated_records": 10
+    },
+    {
+      "api_calls": 3,
+      "bytes_returned": 2382,
+      "model_context_bytes": 573,
+      "strategy": "focused",
+      "unrelated_records": 10
+    },
+    {
+      "api_calls": 104,
+      "bytes_returned": 39111,
+      "model_context_bytes": 35364,
+      "strategy": "naive",
+      "unrelated_records": 100
+    },
+    {
+      "api_calls": 3,
+      "bytes_returned": 2382,
+      "model_context_bytes": 573,
+      "strategy": "focused",
+      "unrelated_records": 100
+    },
+    {
+      "api_calls": 1004,
+      "bytes_returned": 369411,
+      "model_context_bytes": 332364,
+      "strategy": "naive",
+      "unrelated_records": 1000
+    },
+    {
+      "api_calls": 3,
+      "bytes_returned": 2382,
+      "model_context_bytes": 573,
+      "strategy": "focused",
+      "unrelated_records": 1000
+    },
+    {
+      "api_calls": 4,
+      "bytes_returned": 6502,
+      "model_context_bytes": 4904,
+      "strategy": "focused+detail",
+      "unrelated_records": 1000
+    }
+  ],
+  "fixture": "deterministic in-memory GitHub-like store; counts exact logical API operations and returned payload bytes",
+  "schema": "stateowl.benchmark/v1"
+}

@@ -1,0 +1,9 @@
+{
+  "schema": "stateowl.router/v1",
+  "routes": {
+    "release": {
+      "path": "state/records/release.json",
+      "select": ["id", "status", "summary", "next"]
+    }
+  }
+}

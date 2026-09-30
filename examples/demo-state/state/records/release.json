@@ -1,0 +1,18 @@
+{
+  "id": "release",
+  "status": "ready",
+  "summary": "Version 1.4.0 is ready for final verification.",
+  "next": "Run the release verification checklist.",
+  "owner": "release-engineering",
+  "links": {
+    "detail": {
+      "path": "state/details/release.md",
+      "format": "text"
+    },
+    "checks": {
+      "path": "state/details/checks.json",
+      "format": "json",
+      "select": ["status", "required"]
+    }
+  }
+}
