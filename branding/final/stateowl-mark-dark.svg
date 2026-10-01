@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="title desc">
+<title id="title">stateOwl mark — dark</title>
+<desc id="desc">stateOwl owl mark for dark backgrounds with a white outline.</desc>
+<path fill="#17212B" stroke="#F4F7F8" stroke-width="8" stroke-linejoin="round" d="M56 93 82 46l28 23c6-2 12-3 18-3s12 1 18 3l28-23 26 47-10 21v39c0 41-24 69-62 87-38-18-62-46-62-87v-39L56 93Z"/>
+<path fill="#263544" d="M82 46 106 76l22-8 22 8 24-30-11 40-35 18-35-18-11-40Z"/>
+<circle cx="100" cy="120" r="34" fill="#F4F7F8"/>
+<circle cx="156" cy="120" r="34" fill="#F4F7F8"/>
+<circle cx="100" cy="120" r="16" fill="#2A8F91"/>
+<circle cx="156" cy="120" r="16" fill="#2A8F91"/>
+<circle cx="100" cy="120" r="7" fill="#17212B"/>
+<circle cx="156" cy="120" r="7" fill="#17212B"/>
+<path fill="#17212B" d="M84 90c10-12 26-18 44-18s34 6 44 18l-17 8c-9-6-18-8-27-8s-18 2-27 8l-17-8Z" opacity="0.9"/>
+<path fill="#D8A84E" d="m128 133 12 13-12 12-12-12 12-13Z"/>
+<path fill="#263544" d="M96 164c10 8 21 12 32 12s22-4 32-12c-8 18-18 30-32 38-14-8-24-20-32-38Z"/>
+</svg>

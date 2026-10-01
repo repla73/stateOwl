@@ -1,12 +1,28 @@
-# stateOwl
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="branding/final/stateowl-mark-dark.svg">
+    <source media="(prefers-color-scheme: light)" srcset="branding/final/stateowl-mark-light.svg">
+    <img src="branding/final/stateowl-mark-light.svg" alt="stateOwl owl mark" width="156">
+  </picture>
+</p>
 
-stateOwl is a GitHub-backed state reader for AI agents. It retrieves the exact project state an agent needs without loading unrelated repository history or records into model context.
+<h1 align="center">stateOwl</h1>
+
+<p align="center"><strong>Exact project state. Minimal context.</strong></p>
+
+<p align="center">A GitHub-backed state reader for AI agents.</p>
+
+---
+
+## What is stateOwl
+
+stateOwl retrieves the exact project state an agent needs without loading unrelated repository history or records into model context.
 
 ## What it aims to solve
 
 AI sessions often waste context and API calls rediscovering structured project state. stateOwl provides a compact, predictable path to the current record that matters.
 
-## How it works
+## How it solves it
 
 1. Resolve the configured mutable Git ref fresh.
 2. Read `.stateowl/router.json` at that exact commit.
