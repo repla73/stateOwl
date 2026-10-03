@@ -1,0 +1,100 @@
+{
+  "protocol": "stateowl/0.2-draft.1",
+  "status": "declarative expectations; not adapter qualification",
+  "target": {
+  "kind": "fixture",
+  "authority": "stateowl.invalid",
+  "resource": "demo",
+  "namespace": "state"
+},
+  "snapshot": {
+  "id": "rev-A",
+  "generation": "g1"
+},
+  "files": {
+  "state/work.json": {
+    "encoding": "base64",
+    "data": "eyJpZCI6IndvcmsiLCJzdGF0dXMiOiJ3b3JraW5nIiwiY291bnQiOjF9Cg==",
+    "digest": "sha256:e72e6b238377e00b08f5e4f800fc68dc3ea633647c85750cd938b8c75f4e0f2c"
+  },
+  "state/detail.txt": {
+    "encoding": "base64",
+    "data": "ZGV0YWlsCg==",
+    "digest": "sha256:460095297a553281b533992aa475ef0593095b903e59c72c8d89a0b6b3062dd2"
+  },
+  "state/obsolete.txt": {
+    "encoding": "base64",
+    "data": "b2Jzb2xldGUK",
+    "digest": "sha256:abdcccf4a6a5fae3da2c8232d6fbf33b61d5db886742c35218e724b8e5c6b0e0"
+  },
+  "state/binary": {
+    "encoding": "base64",
+    "data": "AP8=",
+    "digest": "sha256:06eb7d6a69ee19e5fbdf749018d3d2abfa04bcbd1365db312eb86dc7169389b8"
+  },
+  ".stateowl/router.json": {
+    "encoding": "base64",
+    "data": "eyJzY2hlbWEiOiJzdGF0ZW93bC5yb3V0ZXIvdjEiLCJyb3V0ZXMiOnsid29yayI6eyJwYXRoIjoic3RhdGUvd29yay5qc29uIiwic2VsZWN0IjpbImlkIiwic3RhdHVzIl19fX0K",
+    "digest": "sha256:ca3ff2d50528654cf805d68e46252495cf9028ed7eeaf328d640c9a2abdadd86"
+  }
+},
+  "receipt_vectors": [
+    {"request":{"protocol":"stateowl/0.2-draft.1","op":"publish","target":{"kind":"fixture","authority":"stateowl.invalid","resource":"demo","namespace":"state"},"expected":{"id":"rev-A","generation":"g1"},"operation_id":"work-001","changes":[{"path":"state/work.json","put":{"encoding":"utf8","data":"{\"id\":\"work\",\"status\":\"ready\",\"count\":1}\n"}},{"path":"state/obsolete.txt","delete":true}]},"validation":{"id":"fixture-validator/v1","digest":"sha256:f607aa970b14f61f0a7291f026b25817fda8cfb3862bc3bf9dacf1f7003b9893"},"preimage":{"protocol":"stateowl/0.2-draft.1","target":{"kind":"fixture","authority":"stateowl.invalid","resource":"demo","namespace":"state"},"expected":{"id":"rev-A","generation":"g1"},"operation_id":"work-001","changes":[{"path":"state/work.json","put":{"digest":"sha256:24cfc462aeab6eaa0d45ce4d3f68c9f1b0455f58575dd9d4c6a0a669afc16be8","bytes":41}},{"path":"state/obsolete.txt","delete":true}],"validation":{"id":"fixture-validator/v1","digest":"sha256:f607aa970b14f61f0a7291f026b25817fda8cfb3862bc3bf9dacf1f7003b9893"}},"canonical":"{\"changes\":[{\"path\":\"state/work.json\",\"put\":{\"bytes\":41,\"digest\":\"sha256:24cfc462aeab6eaa0d45ce4d3f68c9f1b0455f58575dd9d4c6a0a669afc16be8\"}},{\"delete\":true,\"path\":\"state/obsolete.txt\"}],\"expected\":{\"generation\":\"g1\",\"id\":\"rev-A\"},\"operation_id\":\"work-001\",\"protocol\":\"stateowl/0.2-draft.1\",\"target\":{\"authority\":\"stateowl.invalid\",\"kind\":\"fixture\",\"namespace\":\"state\",\"resource\":\"demo\"},\"validation\":{\"digest\":\"sha256:f607aa970b14f61f0a7291f026b25817fda8cfb3862bc3bf9dacf1f7003b9893\",\"id\":\"fixture-validator/v1\"}}","digest":"sha256:4c5a8264bffdc08d05e23ab122cf15f96d1dad070e8bda8b9348eb87379bb46a"}
+  ],
+  "schema_cases": [
+    {"id":"target-git","definition":"Target","instance":{"kind":"git","authority":"github.com","resource":"acme/project","namespace":"refs/heads/state"},"valid":true},
+    {"id":"snapshot-sha256","definition":"Snapshot","instance":{"id":"git:sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","generation":"configured-generation"},"valid":true},
+    {"id":"snapshot-opaque","definition":"Snapshot","instance":{"id":"rev-A","generation":"g1"},"valid":true},
+    {"id":"valid-path-0","definition":"Path","instance":"a/b.json","valid":true},
+    {"id":"valid-path-1","definition":"Path","instance":".state/current.json","valid":true},
+    {"id":"valid-path-2","definition":"Path","instance":"state/a%2Fb.json","valid":true},
+    {"id":"valid-path-3","definition":"Path","instance":"state/é.json","valid":true},
+    {"id":"invalid-path-0","definition":"Path","instance":"../x","valid":false},
+    {"id":"invalid-path-1","definition":"Path","instance":"a/../x","valid":false},
+    {"id":"invalid-path-2","definition":"Path","instance":"/x","valid":false},
+    {"id":"invalid-path-3","definition":"Path","instance":"a//b","valid":false},
+    {"id":"invalid-path-4","definition":"Path","instance":"a/./b","valid":false},
+    {"id":"invalid-path-5","definition":"Path","instance":"a/","valid":false},
+    {"id":"invalid-path-6","definition":"Path","instance":"a\\b","valid":false},
+    {"id":"invalid-path-7","definition":"Path","instance":"x\n","valid":false},
+    {"id":"invalid-path-8","definition":"Path","instance":"a/..","valid":false},
+    {"id":"invalid-path-9","definition":"Path","instance":"","valid":false},
+    {"id":"mixed-read-modes","definition":"ReadRequest","instance":{"protocol":"stateowl/0.2-draft.1","op":"read","target":{"kind":"fixture","authority":"stateowl.invalid","resource":"demo","namespace":"state"},"at":{"current":true,"snapshot":{"id":"rev-A","generation":"g1"}},"records":[{"key":"work","path":"state/work.json","format":"json","select":["status","missing"]}]},"valid":false},
+    {"id":"mixed-path-route","definition":"ReadRequest","instance":{"protocol":"stateowl/0.2-draft.1","op":"read","target":{"kind":"fixture","authority":"stateowl.invalid","resource":"demo","namespace":"state"},"at":{"snapshot":{"id":"rev-A","generation":"g1"}},"records":[{"key":"work","path":"state/work.json","format":"json","select":["status","missing"],"route":"work"}]},"valid":false},
+    {"id":"text-projection","definition":"ReadRequest","instance":{"protocol":"stateowl/0.2-draft.1","op":"read","target":{"kind":"fixture","authority":"stateowl.invalid","resource":"demo","namespace":"state"},"at":{"snapshot":{"id":"rev-A","generation":"g1"}},"records":[{"key":"work","path":"state/work.json","format":"text","select":["status","missing"]}]},"valid":false},
+    {"id":"unsupported-version","definition":"ReadRequest","instance":{"protocol":"stateowl/999","op":"read","target":{"kind":"fixture","authority":"stateowl.invalid","resource":"demo","namespace":"state"},"at":{"snapshot":{"id":"rev-A","generation":"g1"}},"records":[{"key":"work","path":"state/work.json","format":"json","select":["status","missing"]}]},"valid":false},
+    {"id":"self-authorized-write","definition":"PublishRequest","instance":{"protocol":"stateowl/0.2-draft.1","op":"publish","target":{"kind":"fixture","authority":"stateowl.invalid","resource":"demo","namespace":"state"},"expected":{"id":"rev-A","generation":"g1"},"operation_id":"work-001","changes":[{"path":"state/work.json","put":{"encoding":"utf8","data":"{\"id\":\"work\",\"status\":\"ready\",\"count\":1}\n"}},{"path":"state/obsolete.txt","delete":true}],"validated":true},"valid":false},
+    {"id":"put-and-delete","definition":"PublishRequest","instance":{"protocol":"stateowl/0.2-draft.1","op":"publish","target":{"kind":"fixture","authority":"stateowl.invalid","resource":"demo","namespace":"state"},"expected":{"id":"rev-A","generation":"g1"},"operation_id":"work-001","changes":[{"path":"state/work.json","put":{"encoding":"utf8","data":"{\"id\":\"work\",\"status\":\"ready\",\"count\":1}\n"},"delete":true},{"path":"state/obsolete.txt","delete":true}]},"valid":false},
+    {"id":"empty-transition","definition":"PublishRequest","instance":{"protocol":"stateowl/0.2-draft.1","op":"publish","target":{"kind":"fixture","authority":"stateowl.invalid","resource":"demo","namespace":"state"},"expected":{"id":"rev-A","generation":"g1"},"operation_id":"work-001","changes":[]},"valid":false},
+    {"id":"committed-without-receipt","definition":"PublishResult","instance":{"protocol":"stateowl/0.2-draft.1","op":"publish","outcome":"committed","target":{"kind":"fixture","authority":"stateowl.invalid","resource":"demo","namespace":"state"},"expected":{"id":"rev-A","generation":"g1"},"operation_id":"work-001","observed_head":{"id":"rev-B","generation":"g1"}},"valid":false},
+    {"id":"pending-with-success-receipt","definition":"PublishResult","instance":{"protocol":"stateowl/0.2-draft.1","op":"publish","outcome":"verification_pending","target":{"kind":"fixture","authority":"stateowl.invalid","resource":"demo","namespace":"state"},"expected":{"id":"rev-A","generation":"g1"},"operation_id":"work-001","admitted":{"id":"rev-B","generation":"g1"},"receipt":{"expected":{"id":"rev-A","generation":"g1"},"snapshot":{"id":"rev-B","generation":"g1"},"operation_id":"work-001","request_digest":"sha256:4c5a8264bffdc08d05e23ab122cf15f96d1dad070e8bda8b9348eb87379bb46a","validation":{"id":"fixture-validator/v1","digest":"sha256:f607aa970b14f61f0a7291f026b25817fda8cfb3862bc3bf9dacf1f7003b9893"}},"error":{"code":"PROVIDER_UNAVAILABLE","message":"provider unavailable","retry":"reconcile"}},"valid":false},
+    {"id":"indeterminate-blind-retry","definition":"PublishResult","instance":{"protocol":"stateowl/0.2-draft.1","op":"publish","outcome":"indeterminate","target":{"kind":"fixture","authority":"stateowl.invalid","resource":"demo","namespace":"state"},"expected":{"id":"rev-A","generation":"g1"},"operation_id":"work-001","error":{"code":"PROVIDER_UNAVAILABLE","message":"provider unavailable","retry":"after_backoff"}},"valid":false},
+    {"id":"not-committed-with-admitted","definition":"PublishResult","instance":{"protocol":"stateowl/0.2-draft.1","op":"publish","outcome":"not_committed","target":{"kind":"fixture","authority":"stateowl.invalid","resource":"demo","namespace":"state"},"expected":{"id":"rev-A","generation":"g1"},"operation_id":"work-001","admitted":{"id":"rev-B","generation":"g1"},"error":{"code":"CONFLICT","message":"conflict","retry":"after_correction"}},"valid":false},
+    {"id":"partial-read-success","definition":"ReadResponse","instance":{"protocol":"stateowl/0.2-draft.1","op":"read","status":"ok","target":{"kind":"fixture","authority":"stateowl.invalid","resource":"demo","namespace":"state"},"snapshot":{"id":"rev-A","generation":"g1"},"records":[{"key":"work","status":"found","format":"json","value":{"status":"working"},"source":{"path":"state/work.json","digest":"sha256:e72e6b238377e00b08f5e4f800fc68dc3ea633647c85750cd938b8c75f4e0f2c","integrity":"provider"},"select":["status","missing"],"missing":["missing"]}],"truncated":true},"valid":false},
+    {"id":"reader-capabilities","definition":"Capabilities","instance":{"protocol":"stateowl/0.2-draft.1","operations":["read"],"formats":["json","text","base64"],"features":["routes","expand"],"resolvers":[{"id":"fixture-router/v1","digest":"sha256:0a3e967505798c7d75f2186c1862cfb0395201d47456ddf64a03ce7d945e3490"}],"limits":{"request_bytes":65536,"record_bytes":65536,"response_bytes":131072,"records":32,"expansions":16,"changes":32,"reconcile_steps":128}},"valid":true},
+    {"id":"writer-missing-guarantees","definition":"Capabilities","instance":{"protocol":"stateowl/0.2-draft.1","operations":["read","publish"],"formats":["json","text","base64"],"features":["routes","expand"],"resolvers":[{"id":"fixture-router/v1","digest":"sha256:0a3e967505798c7d75f2186c1862cfb0395201d47456ddf64a03ce7d945e3490"}],"limits":{"request_bytes":65536,"record_bytes":65536,"response_bytes":131072,"records":32,"expansions":16,"changes":32,"reconcile_steps":128}},"valid":false},
+    {"id":"writer-capabilities","definition":"Capabilities","instance":{"protocol":"stateowl/0.2-draft.1","operations":["read","publish"],"formats":["json","text","base64"],"features":["routes","expand"],"resolvers":[{"id":"fixture-router/v1","digest":"sha256:0a3e967505798c7d75f2186c1862cfb0395201d47456ddf64a03ce7d945e3490"}],"limits":{"request_bytes":65536,"record_bytes":65536,"response_bytes":131072,"records":32,"expansions":16,"changes":32,"reconcile_steps":128},"publication":{"continuity":"append_only_required","receipt_retention":"Fixture only: complete history","authority":"project_validated"}},"valid":true},
+    {"id":"digest-final-newline","definition":"Digest","instance":"sha256:2d711642b726b04401627ca9fbac32f5c8530fb1903cc4db02258717921a4881\n","valid":false},
+    {"id":"route-without-resolver","definition":"ReadRequest","instance":{"protocol":"stateowl/0.2-draft.1","op":"read","target":{"kind":"fixture","authority":"stateowl.invalid","resource":"demo","namespace":"state"},"at":{"snapshot":{"id":"rev-A","generation":"g1"}},"records":[{"key":"w","route":"work"}]},"valid":false},
+    {"id":"expand-without-resolver","definition":"ReadRequest","instance":{"protocol":"stateowl/0.2-draft.1","op":"read","target":{"kind":"fixture","authority":"stateowl.invalid","resource":"demo","namespace":"state"},"at":{"snapshot":{"id":"rev-A","generation":"g1"}},"records":[{"key":"w","path":"state/work.json","format":"json","expand":["detail"]}]},"valid":false},
+    {"id":"missing-array-without-selection","definition":"Record","instance":{"key":"work","status":"found","format":"json","value":{"id":"work","status":"working","count":1},"source":{"path":"state/work.json","digest":"sha256:e72e6b238377e00b08f5e4f800fc68dc3ea633647c85750cd938b8c75f4e0f2c","integrity":"provider"},"missing":[]},"valid":false}
+  ],
+  "json_cases": [
+    {"id":"valid-json","base64":"eyJhIjoxfQ==","valid":true},
+    {"id":"duplicate-key","base64":"eyJhIjoxLCJhIjoyfQ==","valid":false},
+    {"id":"nested-duplicate","base64":"eyJhIjp7ImIiOjEsImIiOjJ9fQ==","valid":false},
+    {"id":"nan","base64":"eyJhIjpOYU59","valid":false},
+    {"id":"infinity","base64":"eyJhIjoxZTk5OTl9","valid":false},
+    {"id":"invalid-utf8","base64":"Iv8i","valid":false},
+    {"id":"bom","base64":"77u/e30=","valid":false},
+    {"id":"surrogate","base64":"Ilx1ZDgwMCI=","valid":false},
+    {"id":"unsafe-integer","base64":"eyJhIjo5MDA3MTk5MjU0NzQwOTkzfQ==","valid":false},
+    {"id":"rounded-decimal","base64":"eyJhIjowLjEwMDAwMDAwMDAwMDAwMDAxfQ==","valid":false},
+    {"id":"ordinary-decimal","base64":"eyJhIjowLjF9","valid":true}
+  ],
+  "scenario_files": [
+    "read-cases.json",
+    "publish-cases.json",
+    "observe-cases.json"
+  ]
+}
