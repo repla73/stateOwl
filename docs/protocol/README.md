@@ -1,7 +1,7 @@
-# Protocol and conformance — draft 2
+# Protocol and conformance — draft 3
 
-**Protocol:** `stateowl/0.2-draft.2`  
-**Stage:** R1 correction prepared for independent re-audit; not stable or independently accepted.  
+**Protocol:** `stateowl/0.2-draft.3`  
+**Status:** R1 correction for independent re-audit; not accepted or stable.  
 **Scope:** Specification, fixtures and offline test infrastructure. R2 has not started.
 
 ## Contract
@@ -9,33 +9,28 @@
 | File | Purpose |
 |---|---|
 | [PROTOCOL.md](PROTOCOL.md) | Provider-neutral identities, focused reads, publication outcomes, observation and deterministic errors. |
-| [git-binding-v1.md](git-binding-v1.md) | Typed Git identities, tag peeling, file modes, atomic receipt representation and bounded reconciliation. |
-| [router-v1.md](router-v1.md) | Self-contained optional `stateowl.router/v1` compatibility binding. |
-| [schema.json](schema.json) | Closed protocol messages and compatibility shapes, JSON Schema 2020-12. |
-| [HARNESS.md](HARNESS.md) | Adapter-facing provider/fault interface and fixture format. |
-| [harness.schema.json](harness.schema.json) | Closed test case/world/fault containers. |
-| [fixtures.json](fixtures.json) | Exact bytes, shared assets, structural/serialization/hash vectors and scenario index. |
-| [Read](read-cases.json), [publish](publish-cases.json), [observe](observe-cases.json) | Fixed expected scenarios executed against finite provider worlds. |
-| [legacy-v0.1.0.json](legacy-v0.1.0.json) | The unchanged six original Reader goldens. |
-| [CHECKS.md](CHECKS.md) | Executed commands, results and evidence limits. |
+| [git-binding-v2.md](git-binding-v2.md) | Typed Git identities, single-step admission policy, exact receipt grammar, bounded reconciliation and file modes. |
+| [router-v1.md](router-v1.md) | Unchanged semantic `stateowl.router/v1` compatibility binding. |
+| [schema.json](schema.json) | Closed protocol messages and compatibility shapes. |
+| [HARNESS.md](HARNESS.md), [harness.schema.json](harness.schema.json) | Adapter-facing finite provider/fault interface and test containers. |
+| [fixtures.json](fixtures.json) | Shared bytes, assets, structural, serialization, receipt-message and identity vectors. |
+| [Read](read-cases.json), [publish](publish-cases.json), [observe](observe-cases.json) | Fixed expected results exercised against isolated provider worlds. |
+| [legacy-v0.1.0.json](legacy-v0.1.0.json) | Six unchanged original Reader goldens. |
+| [CHECKS.md](CHECKS.md) | Executed checks and their evidence limits. |
 
-## Correction decisions
+## Re-audit corrections
 
-| Finding | Draft-2 decision |
-|---|---|
-| F01 — binding identity | One pinned semantic identifier shared by independent implementations; no implementation-code digest. |
-| F02 — Git generation | Ordinary snapshots contain only typed/scoped immutable identity. No invented incarnation counter; write continuity is an explicit trust boundary. |
-| F03 — receipt discovery | Canonical identity in a commit-message receipt, sole expected parent, complete candidate verification and a bounded linear-history walk. Missing history stays uncertain. |
-| F04 — legacy compatibility | A separately versioned normative binding defines supported router/link behavior without requiring Python knowledge. |
-| F05 — determinism | Exact result cardinality/order, minimal outcome-specific fields, fixed error codes/retry classes and ordered validation stages. |
-| N02 — replay identity | Remove `operation_id`. Hash the normalized unordered change set, target, expected state and validation pin. `reconcile` cannot dispatch. |
-| N03 — retention | `reachable_history` has precise storage semantics, not a free-text or time-based guarantee; lookup is numerically bounded. |
+**F06 — Admission evidence.** Ancestry proves reachability, not every intermediate ref admission. Ancestry-based recovery now requires an enforced **single-step** policy for all authorized namespace update paths: each new head has the previous head as its sole parent. The harness represents actual ref transitions separately from the commit graph. Identical A–C–D graphs yield different results for A→C→D and A→D; skipped, weak or unknown admission histories cannot produce ancestry-based success or exclusion. Authenticated positive admission evidence remains stronger than later verification failure.
 
-The archived [architecture](../ARCHITECTURE-DECISION.md), [roadmap](../ROADMAP.md), Charter, product runtime, adapters and package version are unchanged. The correction assignment accepts R0 for this work; historical wording in the archived package remains intact.
+**F07 — Receipt grammar.** A message is exactly the receipt line, or the fixed heading `stateOwl publication` plus one blank line plus the receipt line. Both end in exactly one LF. Whole-message parsing rejects additional paragraphs, blank lines, heading whitespace, CRLF, inline markers and other nonconforming forms. Fixed positive and negative vectors exercise both parsing and reconciliation.
+
+**N02 — Read capability.** Advertising `read` requires at least one supported format. Non-reader endpoints may still have an empty format list.
+
+The protocol advances to draft 3, the changed Git semantic binding to `stateowl.git-receipt/2`, and the test container to `stateowl.fixtures/3`. Prior identifiers are not silently reinterpreted. Earlier F01–F05 corrections remain: semantic binding pins, snapshots without fabricated generations, canonical unordered publication identity without `operation_id`, read-only reconciliation, separate router semantics and deterministic outcomes/errors. `reachable_history` still makes no retention-duration promise.
 
 ## Run
 
-Test prerequisites: Python, `jsonschema`, and Node.js for the **test-only ECMAScript/JCS oracle**. These are not new product/runtime dependencies. Install the existing test requirements in a test environment if needed:
+Test prerequisites are Python, `jsonschema`, and Node.js for the **test-only ECMAScript/JCS oracle**. No product dependency is added.
 
 ```sh
 python -m pip install -r docs/protocol/requirements-checks.txt
@@ -44,10 +39,10 @@ python docs/protocol/check_fixtures.py --adapter python docs/protocol/harness_cl
 PYTHONPATH=src python -m unittest discover -s tests -v
 ```
 
-The first command installs test dependencies; the checks themselves use no network. `harness.py` is a finite specification model, and `harness_client.py` tests the JSONL interface using that same model in another process. Neither is a production adapter or an independent implementation. `fixture_codec.py` and `ecma_oracle.js` test serialization; they expose no stateOwl service. No GitHub Actions workflow is added.
+Dependency installation is separate; the checks use no network. `harness_client.py` runs the **same finite Python model** through JSONL in another process, not an independent implementation. The model, codecs and Node helper are test infrastructure, not production adapters or services. No GitHub Actions workflow is added.
 
-The corpus contains 90 read, 56 publication and 16 observation scenarios. The checker validates fixed expected outputs and actual simulated traces, including zero-dispatch reconciliation and complete candidate bytes/modes. Six separate tests execute the unchanged legacy Reader. See CHECKS for the exact counts of structural and serialization assertions.
+The corrected corpus retains the original 162 scenarios with version/identity updates, and adds 31 publication regressions: **90 read, 87 publication and 16 observation scenarios** in total. It also adds 21 direct receipt-message vectors and six structural vectors. See CHECKS for exact results.
 
-## R1 boundary
+## Boundary
 
-The listed R1 correction gaps are covered for re-audit. Independent review still decides acceptance. Real GitHub/local-Git write qualification, independent-language agreement, real Governance fixtures, hosted-plane continuity and automation qualification remain later gates. Synthetic graph execution is not evidence of real-provider concurrency, history retention or object-chain integrity.
+R0 architecture, Charter, product runtime, existing adapters, package version, original tests and legacy goldens remain unchanged. This worker correction requires independent R1 re-audit. Real GitHub/local-Git enforcement and publication qualification, independent implementations, Governance compatibility, hosted-plane continuity and automation remain later gates.

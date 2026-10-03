@@ -1,7 +1,7 @@
 # Optional compatibility binding — stateowl.router/v1
 
 **Semantic binding:** `urn:stateowl:binding:router-v1:1`  
-**Protocol:** `stateowl/0.2-draft.2`  
+**Protocol:** `stateowl/0.2-draft.3`  
 **Consumer:** existing 0.1.0 router/project files and their documented focused-read behavior. This is not a universal state layout or a replacement Governance router.
 
 ## L1. Router and selected route

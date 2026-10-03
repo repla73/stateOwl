@@ -46,7 +46,9 @@ def case_inputs(suite,case):
 def check_trace(case,p,result,raw):
     trace=case.get('trace',{})
     for k,n in trace.items():
-        if k=='final_modes':
+        if k=='ref_updates':
+            require(p.world.get('ref_updates',[])==n,case['id']+': actual ref transitions')
+        elif k=='final_modes':
             files=p.world['objects'][p.world['head']]['files']
             require({path:files[path]['mode'] for path in n}==n,case['id']+': final modes')
         else:
@@ -184,7 +186,7 @@ def main():
     hs=read_json(HERE/'harness.schema.json');Draft202012Validator.check_schema(hs)
     hv={n:Draft202012Validator({'$defs':hs['$defs'],'$ref':'#/$defs/'+n}) for n in hs['$defs']}
     rules=set()
-    for name in ('PROTOCOL.md','git-binding-v1.md','router-v1.md'):
+    for name in ('PROTOCOL.md','git-binding-v2.md','router-v1.md'):
         rules.update(re.findall(r'(?:\*\*|## )([A-Z][0-9]+)\.',(HERE/name).read_text()))
     for case in suite['schema_cases']:require(VALIDATORS[case['definition']].is_valid(case['instance'])==case['valid'],'structural '+case['id'])
     for case in suite['serialization']:
@@ -195,6 +197,12 @@ def main():
         try:unbase64(case['text']);valid=True
         except Fault:valid=False
         require(valid==case['valid'],'base64 vector '+repr(case['text']))
+    for case in suite['receipt_message_cases']:
+        try:
+            actual_identity=receipt_identity(case['message'],VALIDATORS['PublicationIdentity'].is_valid);code=None
+        except Fault as exc:
+            actual_identity=None;code=exc.code
+        require(code==case['error'] and actual_identity==case['expected_identity'],'receipt grammar '+case['id'])
     identity_checks=0
     for vec in suite['identity_vectors']:
         VALIDATORS['PublicationIdentity'].validate(vec['identity'])
@@ -232,7 +240,7 @@ def main():
     if adapter:adapter.close()
     checks=harness_self_checks(suite)
     legacy=check_legacy()
-    print(json.dumps({'status':'passed','draft':suite['protocol'],'schemas':2,'structural':len(suite['schema_cases']),**counts,'strict_json':len(suite['serialization']),'canonical_base64':len(suite['base64_cases']),'identity_checks':identity_checks,'general_jcs':len(suite['jcs_vectors']),'git_object_vectors':len(suite['git_blob_vectors']),'fault_harness_self_checks':checks,'simulated_scenarios':sum(counts.values()),'legacy_reader_cases':legacy,'external_adapter_executed':bool(args.adapter),'real_provider_executions':0},indent=2))
+    print(json.dumps({'status':'passed','draft':suite['protocol'],'schemas':2,'structural':len(suite['schema_cases']),**counts,'strict_json':len(suite['serialization']),'canonical_base64':len(suite['base64_cases']),'receipt_message_vectors':len(suite['receipt_message_cases']),'identity_checks':identity_checks,'general_jcs':len(suite['jcs_vectors']),'git_object_vectors':len(suite['git_blob_vectors']),'fault_harness_self_checks':checks,'simulated_scenarios':sum(counts.values()),'legacy_reader_cases':legacy,'external_adapter_executed':bool(args.adapter),'real_provider_executions':0},indent=2))
 
 if __name__=='__main__':
     try:main()

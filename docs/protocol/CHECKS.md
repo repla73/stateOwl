@@ -1,8 +1,9 @@
-# Draft-2 correction verification
+# Draft-3 correction verification
 
 **Date:** 3 October 2026  
-**Baseline:** `repla73/stateOwl@a3770c370a13002ca1bc0dfeae4b3af969b7976a`  
-**Environment:** Python 3.13.5; jsonschema 4.26.0; Node.js v22.16.0. These are observed test versions, not product version pins.
+**Baseline:** `repla73/stateOwl@ab244ffbebfee2ce0f3a0b47ac9144803dcdb849`  
+**Subject:** `stateowl/0.2-draft.3`, `stateowl.git-receipt/2`, `stateowl.fixtures/3`  
+**Environment:** Python 3.13.5; jsonschema 4.26.0; Node.js v22.16.0. Observed test versions, not product pins.
 
 ## Executed commands
 
@@ -12,31 +13,38 @@ python docs/protocol/check_fixtures.py --adapter python docs/protocol/harness_cl
 PYTHONPATH=src python -m unittest discover -s tests -v
 ```
 
-Both complete protocol runs passed. The second passed the same cases through the documented JSONL provider interface in a separate process. It uses the **same finite model**, not an independent protocol implementation.
+Both complete protocol runs passed. The JSONL run uses the **same finite Python model** through another process; it is not independent implementation evidence.
 
-| Check | Final result |
+| Check | Result in each complete protocol run |
 |---|---|
-| Protocol and harness JSON Schema 2020-12 metaschemas | 2 passed. |
-| Valid/invalid structural vectors | 62 passed. |
-| Read scenarios | 90 passed in-process and 90 through JSONL. |
-| Publication scenarios | 56 passed in-process and 56 through JSONL. |
-| Observation scenarios | 16 passed in-process and 16 through JSONL. |
-| Strict source JSON | 24 accepted/rejected as specified, including negative zero and exact numeric limits. |
-| Canonical base64 | 9 accepted/rejected as specified. |
-| Publication identity | 14 assertions across 2 fixed preimage/canonical/hash vectors; change order, encoding and mode equivalence, binding/context differences. |
-| General JCS serialization | 3 fixed vectors, including UTF-16 key order and ECMAScript number spelling. |
-| Native Git blob identity | 2 real SHA-1/SHA-256 hash vectors. |
-| Harness negative/self checks | 10 passed: fault/call validation, asset graph rejection and response/provenance mutation detection. |
-| Unchanged legacy Reader | 6 golden cases passed in each complete protocol run, including actual read traces. |
-| Existing runtime suite | All 10 tests passed: 6 core, 2 mocked GitHub transport, 2 deterministic benchmark-contract tests. |
+| Protocol and harness metaschemas | 2 passed. |
+| Structural vectors | 68 passed, including read-format and obsolete publication-capability rejection. |
+| Read scenarios | 90 passed. |
+| Publication scenarios | 87 passed. |
+| Observation scenarios | 16 passed. |
+| Strict source JSON | 24 passed. |
+| Canonical base64 | 9 passed. |
+| Receipt-message grammar | 21 passed: both exact forms, ordinary nonreceipt control and 18 malformed forms. |
+| Publication identity | 14 assertions across 2 fixed preimage/canonical/hash vectors passed. |
+| General JCS | 3 fixed vectors passed. |
+| Native Git blob identity | 2 SHA-1/SHA-256 vectors passed. |
+| Harness negative/self checks | 10 passed. |
+| Actual unchanged legacy Reader | 6 golden cases passed, including read traces. |
+| Existing runtime suite (separate command) | All 10 tests passed: 6 core, 2 mocked GitHub and 2 benchmark-contract tests. |
 
-The 162 scenarios contain fixed declarative expectations, **and** each was executed against the finite provider/fault model. This is stronger than draft 1's expectation-consistency checks, but it is not live-provider qualification. Early exits for malformed inputs, unsupported capabilities and denied access are deliberately part of those scenario counts.
+## Regression evidence
 
-## Provenance of actual legacy execution
+Before correction, all 162 original finite scenarios passed, while separate reproductions showed the reported gaps: the old parser accepted extra heading paragraphs and separator lines, and the model reported an intermediate receipt-bearing snapshot committed when an added actual-ref-history fact said it was skipped. The original provider did not consume that fact.
 
-The execution environment could not clone through public DNS. The connected GitHub tool supplied source; local test copies were verified against these existing repository Git blobs before execution. They were not edited or included in the correction publication.
+The corrected corpus preserves those 162 scenarios with draft/identity updates and adds **31 publication regressions**. Eleven address admission history, including identical A–C–D graphs with A→C→D versus direct A→D, absent/weak policy, ref races after initial access and during discovery, and retention of a positive admission acknowledgment after a later policy breach. Twenty run the receipt grammar through reconciliation. All reconciliation cases prohibit new dispatch; the skipped-head cases cannot derive admission from ancestry. Twenty-one direct parser vectors separately test the same grammar and an ordinary no-marker message. Expected results are fixed data, not regenerated by the checker.
 
-| File | Verified original Git blob |
+Actual ref transitions are finite test-world facts, not a new production reflog, database or portable proof format. A trusted single-step policy is a stated precondition; neither a capability label nor a finite event list proves real-world enforcement.
+
+## Source and preservation
+
+Public DNS did not provide a repository checkout in this environment. Source was retrieved through the connected GitHub tool and local copies were checked against the original Git blob IDs before execution:
+
+| Unchanged source | Verified Git blob |
 |---|---|
 | `src/stateowl/core.py` | `eadb36a647f3940e7faab4504c028064ae0133a5` |
 | `src/stateowl/github.py` | `30804a41d23f20731b1cf2e92a10e32589644bb1` |
@@ -47,12 +55,10 @@ The execution environment could not clone through public DNS. The connected GitH
 | `benchmarks/benchmark.py` | `f551d32066b49dc80e74eaf7991078199929eae9` |
 | `docs/protocol/legacy-v0.1.0.json` | `239017533a80bb0f68b9bcb5ff8d87e6a71c1a67` |
 
-The checker independently verifies the pinned legacy core blob on every run. The original API's generation remains 0.1.0; passing its goldens does not make it an implementation of draft 2.
+The checker re-verifies the pinned legacy core on every run. Runtime, existing tests, adapters, package version, Charter and architecture are not part of the correction delta.
 
-## Evidence limits and next gate
+## Evidence boundary
 
-**Real-provider protocol executions: zero.** No GitHub/local-Git production adapter, TypeScript implementation, plugin, MCP service, host deployment or R2 work was started. Publishing these documentation/test files is not a protocol-provider qualification run.
+**Real-provider protocol executions: 0.** All 193 protocol scenarios execute against an isolated finite provider/fault model. Synthetic commit/tag graphs do not qualify real Git object chains, CAS, permissions, single-step enforcement, retention or concurrency. The unchanged legacy Reader and its original tests execute actual source; their mocked transports are not live GitHub tests. Publishing these documentation/test files is not a protocol qualification run.
 
-The conceptual commit/tag IDs are intentionally synthetic. The tests establish specified behavior under injected facts, including receipt discovery, complete candidate preservation, lost responses, reset/missing-history uncertainty and deterministic errors. They do not establish actual GitHub CAS semantics, authenticated Git object-chain proofs, platform retention, independent cross-language conformance, Governance compatibility, latency/token performance or external-effect guarantees.
-
-Worker assessment: F01–F05 and the listed R1 conformance gaps are addressed; no known listed R1 gap remains. **Ready for independent R1 re-audit**, not independently accepted, stable, final or release-candidate.
+Worker assessment: F06 and F07 are addressed; the nonblocking empty-reader-format issue is also corrected. **Ready for independent R1 re-audit**, not accepted, stable or release-candidate. No R2 work, production adapter, independent implementation, plugin, infrastructure or deployment was started.

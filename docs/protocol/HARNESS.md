@@ -1,4 +1,4 @@
-# R1 provider/fault harness — stateowl.fixtures/2
+# R1 provider/fault harness — stateowl.fixtures/3
 
 This is a **test interface**, not a production StateStore, network adapter or public stateOwl API. A later independent implementation can consume the same requests and injected facts without importing the Python model. No fixture grants project authority outside its isolated test world.
 
@@ -18,19 +18,29 @@ A file is `{base64,mode}`. A commit has `type:"commit"`, ordered `parents`, raw 
 
 World fields model target/namespace, availability, canonical object format, trusted access/validation, retained objects, token state and a finite fault script. Defaults are listed in `harness.py`; `harness.schema.json` closes the world/case containers. `next_due` and `executor_time` are explicitly inert executor facts: they cannot make `observe` invoke a model or publish.
 
+### Ref transitions are not object ancestry
+
+`admission_policy` is trusted fixture configuration: `single_step`, `linear_append_only` or `unknown`; absence means unknown for publication. Only `single_step` can support ancestry-based recovery. Existing worlds explicitly supply that policy rather than deriving it from their object graphs.
+
+Optional `ref_updates` is a bounded, ordered list of **actual test-world ref transitions** `{old,new}`, independent of the `objects` DAG. It is not a series of sampled heads, a production reflog requirement, a protocol proof field or an additional project-state database. A list may begin at an arbitrary point; listed events are consecutive. The provider records new transitions caused by `admit`, `head_after_admit`, `head_after_resolve` and fault mutations of `head`. It does not invent events for intermediate ancestor commits. No-op ref assignments produce no event.
+
+For publication access, the finite provider reports `intact` only with the declared single-step policy and no contrary supplied events. Known deletion, rollback, nonconsecutive events or an event whose new commit does not have the old head as its sole parent reports `reset` (the existing continuity-failure class). Missing event metadata or more than 1024 events reports `unknown`. A finite event list is not itself a substitute for the trusted policy declaration. These facts test a binding's handling of a qualified policy or a known breach; they do not prove that arbitrary real Git repositories obey it.
+
+The F06 contrasting cases share the exact graph A–C–D and the matching receipt in C. Events A→C then C→D permit the historical inference under intact policy; a single A→D event does not. Faults also inject such a jump after the initial access check. Recovery rechecks the trusted continuity report after resolving the observed head and after the ancestry walk, before treating ancestry as admission/exclusion. The acknowledgment case preserves `verification_pending` when a later jump prevents verification; it does not erase established admission.
+
 ## Call contract
 
 Each method has exactly these arguments; extra/missing arguments fail the harness, not the protocol. IDs below are exact snapshot/object strings, and target uses the protocol Target shape. The provider returns one value or one normalized fault. It never returns a desired stateOwl outcome.
 
 | Method | Arguments | Value |
 |---|---|---|
-| `access` | `target`, `operation` | Trusted `{validation,validator_available,project_authorized,continuity,auth_scope}`, or an authentication/access fault. `validation` is a semantic ID or null; continuity is `intact`, `unknown` or `reset`. |
+| `access` | `target`, `operation` | Trusted `{validation,validator_available,project_authorized,continuity,auth_scope}`, or an authentication/access fault. `validation` is a semantic ID or null; continuity is `intact`, `unknown` or `reset`, with publication continuity constrained by the single-step policy and actual ref transitions described above. |
 | `resolve` | `target` | Current ref's exact object ID, or `NOT_FOUND`. Optional `head_after_resolve` advances the head **after** capturing the returned ID. |
 | `inspect` | `target`, `snapshot` | `{id,type,...}` metadata excluding file bodies; commit parents/message or tag target/type. Missing objects report `SNAPSHOT_UNAVAILABLE`. |
 | `file` | `target`, `snapshot`, `path` | Exact `{base64,mode,digest,integrity,object?}`. Native blob identity is computed from the returned bytes unless a fault replaces the response. Authorized absence is `NOT_FOUND`; concealed denial is `NOT_FOUND_OR_FORBIDDEN`. |
 | `tree` | `target`, `snapshot` | Complete finite fixture file map. This is a publication test primitive, **not** permission for a focused read to collect a repository tree. Production verification may compare Merkle trees instead. |
 | `validate` | `target`, `expected`, `binding`, `old`, `candidate` | `true` or `VALIDATION_FAILED`/`FORBIDDEN`. The fixture's concrete project rule rejects changes to `protected_path` (default `state/validation.json`) without independent `allow_policy_change`. It compares old and candidate; candidate bytes cannot disable it. |
-| `admit` | `target`, `expected`, `candidate`, `message` | Atomic compare of current head. Conflict returns `{status:"conflict"}` without mutation. Success creates the single-parent fixture commit and returns `{status:"admitted",snapshot}`. Optional `head_after_admit` models a later successor after successful admission. |
+| `admit` | `target`, `expected`, `candidate`, `message` | Atomic compare of current head. Conflict returns `{status:"conflict"}` without mutation. Success creates the single-parent fixture commit and returns `{status:"admitted",snapshot}`. Optional `head_after_admit` models an actual later ref transition, including a skipped-head fault; it is logged independently of commit ancestry. |
 | `token_check` | `token`, `scope` | Prior `{scope,fingerprint,...}` or `TOKEN_INVALID`; expiry or unequal scope is invalid. |
 | `token_issue` | `scope`, `fingerprint` | Deterministic token described below, and stores that comparison state. |
 
@@ -85,7 +95,7 @@ Examples use abbreviated nested objects; actual messages obey the schemas and me
 
 ## Executed versus declared evidence
 
-`check_fixtures.py` checks message schemas, fixed expectations, source/canonical identities, stage precedence, focused-read provenance and traces, complete dispatched candidate bytes/modes and receipt, admission counts, and zero-dispatch reconciliation. It runs the finite model for every scenario. It separately invokes the unchanged real 0.1.0 Reader for the six original goldens and verifies that source's pinned Git blob before execution.
+`check_fixtures.py` checks message schemas, fixed expectations, source/canonical identities, stage precedence, focused-read provenance and traces, complete dispatched candidate bytes/modes and receipt, admission counts, explicit ref-transition traces, and zero-dispatch reconciliation. Receipt grammar vectors separately exercise both exact accepted forms and forbidden message bytes; the same malformed messages also run through publication reconciliation. It runs the finite model for every scenario. It separately invokes the unchanged real 0.1.0 Reader for the six original goldens and verifies that source's pinned Git blob before execution.
 
 The ECMAScript helper supplies actual `Number`/`JSON.stringify` serialization and UTF-16 key ordering for JCS tests. The restricted Python receipt serializer is compared with it. Neither helper accesses a repository. The full existing test suite is run separately.
 

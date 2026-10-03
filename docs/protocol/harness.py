@@ -73,6 +73,35 @@ class Provider:
             key=(f['method'],f.get('at',1),f.get('phase','before'))
             if key in events:raise ValueError('duplicate fault event')
             events.add(key)
+    @staticmethod
+    def move_head(store,new):
+        old=store.get('head')
+        if old!=new:
+            store.setdefault('ref_updates',[]).append({'old':old,'new':new})
+        store['head']=new
+    def mutate(self,patch):
+        old=self.world.get('head')
+        self.world=merge(self.world,patch)
+        if 'head' in patch and self.world.get('head')!=old:
+            self.world.setdefault('ref_updates',[]).append({'old':old,'new':self.world.get('head')})
+    @staticmethod
+    def publication_continuity(store):
+        status=store.get('continuity','intact')
+        if status!='intact': return status
+        # This is a trusted test configuration, never inferred from ancestry.
+        if store.get('admission_policy')!='single_step': return 'unknown'
+        updates=store.get('ref_updates',[])
+        if len(updates)>1024: return 'unknown'
+        previous=None
+        for i,event in enumerate(updates):
+            old,new=event['old'],event['new']
+            if old is None or new is None or old==new: return 'reset'
+            if i and old!=previous: return 'reset'
+            obj=store.get('objects',{}).get(new)
+            if obj is None: return 'unknown'
+            if obj.get('type')!='commit' or obj.get('parents')!=[old]: return 'reset'
+            previous=new
+        return 'intact'
     def store(self,target):
         if target==self.world['target']: return self.world
         store=self.world.get('external',{}).get(target['resource'])
@@ -86,14 +115,14 @@ class Provider:
         for i,f in faults:
             if f.get('phase','before')=='before':
                 self.used_faults.add(i)
-                if 'mutate' in f:self.world=merge(self.world,f['mutate'])
+                if 'mutate' in f:self.mutate(f['mutate'])
                 if 'code' in f:raise ProviderFailure(f['code'])
                 if 'replace' in f:return copy.deepcopy(f['replace'])
         result=self._call(method,**args)
         for i,f in faults:
             if f.get('phase','before')=='after':
                 self.used_faults.add(i)
-                if 'mutate' in f:self.world=merge(self.world,f['mutate'])
+                if 'mutate' in f:self.mutate(f['mutate'])
                 if 'code' in f:raise ProviderFailure(f['code'],method=='admit')
                 if 'replace' in f:result=copy.deepcopy(f['replace'])
         return result
@@ -110,11 +139,13 @@ class Provider:
         if method=='access':
             if not s.get('authenticated',True):raise Fault('UNAUTHENTICATED')
             if not s.get('authorized',True):raise Fault('FORBIDDEN')
-            return {k:copy.deepcopy(s.get(k,v)) for k,v in {'validation':None,'validator_available':True,'project_authorized':True,'continuity':'intact','auth_scope':'fixture-user'}.items()}
+            result={k:copy.deepcopy(s.get(k,v)) for k,v in {'validation':None,'validator_available':True,'project_authorized':True,'continuity':'intact','auth_scope':'fixture-user'}.items()}
+            if a['operation']=='publish': result['continuity']=self.publication_continuity(s)
+            return result
         if method=='resolve':
             h=s.get('head')
             if h is None:raise Fault('NOT_FOUND')
-            if 'head_after_resolve' in s:s['head']=s['head_after_resolve']
+            if 'head_after_resolve' in s:self.move_head(s,s['head_after_resolve'])
             return h
         if method in ('inspect','file','tree'):
             oid=a['snapshot'];o=s.get('objects',{}).get(oid)
@@ -139,8 +170,8 @@ class Provider:
             if s.get('head')!=a['expected']:return {'status':'conflict'}
             oid=s['next_snapshot']
             s['objects'][oid]={'type':'commit','parents':[a['expected']],'message':a['message'],'files':copy.deepcopy(a['candidate'])}
-            s['head']=oid;self.admissions+=1
-            if 'head_after_admit' in s:s['head']=s['head_after_admit']
+            self.move_head(s,oid);self.admissions+=1
+            if 'head_after_admit' in s:self.move_head(s,s['head_after_admit'])
             return {'status':'admitted','snapshot':oid}
         raise ValueError('unimplemented test method')
 
@@ -326,6 +357,7 @@ class Model:
         if wanted!=actual:raise Fault('INTEGRITY_MISMATCH')
         if head is None:
             head=self.p.call('resolve',target=t)
+            if self.p.call('access',target=t,operation='publish')['continuity']!='intact':raise Fault('NAMESPACE_DISCONTINUITY')
             if head!=oid:self.walk(t,head,oid,ancestor_only=True)
         return self.result(r,oid,head)
     def walk(self,t,head,expected,ancestor_only=False):
@@ -346,10 +378,15 @@ class Model:
     def reconcile(self,r):
         self.was_dispatched=True  # Outcome unresolved, not an actual new dispatch.
         t=r['target'];head=self.p.call('resolve',target=t)
+        # Recheck trusted policy after resolution: a CAS race may have exposed
+        # a ref jump that was not known at the initial access check.
+        if self.p.call('access',target=t,operation='publish')['continuity']!='intact':raise Fault('NAMESPACE_DISCONTINUITY')
         if head==r['expected']['id']:raise Fault('PROVIDER_UNAVAILABLE')
         match=self.walk(t,head,r['expected']['id'])
         if match is None:raise Fault('PROVIDER_UNAVAILABLE')
         oid,m=match
+        # A breach exposed during the walk also invalidates ancestry evidence.
+        if self.p.call('access',target=t,operation='publish')['continuity']!='intact':raise Fault('NAMESPACE_DISCONTINUITY')
         receipt=receipt_identity(m.get('message',''),VALIDATORS['PublicationIdentity'].is_valid)
         if receipt!=identity(r):
             return {'protocol':VERSION,'op':'publish','outcome':'not_committed','request_digest':request_digest(r),'error':error('CONFLICT')}

@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "urn:stateowl:fixtures:2",
+  "$id": "urn:stateowl:fixtures:3",
   "title": "R1 test containers (not protocol messages)",
   "$defs": {
     "Case": {
@@ -244,11 +244,49 @@
         },
         "conceal_absence": {
           "type": "boolean"
+        },
+        "admission_policy": {
+          "enum": [
+            "single_step",
+            "linear_append_only",
+            "unknown"
+          ]
+        },
+        "ref_updates": {
+          "type": "array",
+          "maxItems": 1024,
+          "items": {
+            "$ref": "#/$defs/RefUpdate"
+          }
         }
       },
       "required": [
         "target",
         "objects"
+      ],
+      "additionalProperties": false
+    },
+    "RefUpdate": {
+      "type": "object",
+      "properties": {
+        "old": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        },
+        "new": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        }
+      },
+      "required": [
+        "old",
+        "new"
       ],
       "additionalProperties": false
     }

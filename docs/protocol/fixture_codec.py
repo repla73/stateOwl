@@ -5,13 +5,14 @@ import base64
 from decimal import Decimal
 import hashlib
 import json
+import re
 from pathlib import Path
 import shutil
 import subprocess
 from typing import Any
 
 HERE = Path(__file__).resolve().parent
-VERSION = "stateowl/0.2-draft.2"
+VERSION = "stateowl/0.2-draft.3"
 MAX_SAFE = 9007199254740991
 
 class Fault(ValueError):
@@ -162,16 +163,14 @@ def receipt_message(request: dict) -> str:
     return "stateOwl publication\n\nStateOwl-Receipt: " + base64.b64encode(restricted_jcs(identity(request))).decode() + "\n"
 
 def receipt_identity(message: str, validate) -> dict | None:
+    """Parse only G4's two complete message forms; never normalize a message."""
     marker="StateOwl-Receipt:"
-    lines=message.splitlines()
-    indices=[i for i,s in enumerate(lines) if s.startswith(marker)]
-    if not indices: return None
+    if not isinstance(message,str): raise Fault("INVALID_SOURCE")
+    if marker not in message: return None
     try:
-        if len(indices)!=1 or "\r" in message or not message.endswith("\n") or message.endswith("\n\n"): raise ValueError()
-        i=indices[0]
-        if i != len(lines)-1 or (i and lines[i-1] != ""): raise ValueError()
-        if not lines[i].startswith(marker+" "): raise ValueError()
-        raw=unbase64(lines[i][len(marker)+1:]); v=strict(raw)
+        match=re.fullmatch(r"(?:stateOwl publication\n\n)?StateOwl-Receipt: ([A-Za-z0-9+/]+={0,2})\n",message)
+        if match is None: raise ValueError()
+        raw=unbase64(match.group(1)); v=strict(raw)
         if not validate(v) or restricted_jcs(v)!=raw: raise ValueError()
         paths=[x["path"] for x in v["changes"]]
         if paths!=sorted(set(paths),key=lambda x:x.encode()): raise ValueError()
