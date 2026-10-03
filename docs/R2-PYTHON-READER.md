@@ -26,6 +26,6 @@ python benchmarks/r2_read_benchmark.py --output benchmarks/results/r2-python-rea
 
 The benchmark token count is explicitly an approximation (`ceil(UTF-8 bytes / 4)`). Simulated provider timing is not GitHub network latency.
 
-The shared native `.state` interoperability fixture is intentionally not included in this candidate. It is pending the coordinator-owned, data-only fixture shared with both language implementations.
+The coordinator-owned shared native `.state` fixture from `60733bc765e029ebfde6102f5f2c265192cf95d9` is included byte-for-byte and qualified by `tests/test_r2_native_state.py` (8/8 cases).
 
 No publish/write API is provided by the R2 modules.
