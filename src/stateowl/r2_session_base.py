@@ -1,6 +1,7 @@
 from __future__ import annotations
 import json
 from .r2_types import *
+from .r2_jcs import jcs_bytes
 
 class SessionBase:
     def __init__(self,p,cap):self.p=p;self.cap=cap;self.lim=cap.get('limits',{});self.cache={};self.absent=set();self.routing=[];self.root_target=None;self.root_oid=None
@@ -27,7 +28,7 @@ class SessionBase:
             if 'resolver' in r and r['resolver'] not in self.cap.get('resolvers',[]):raise ReadFault('UNSUPPORTED_CAPABILITY')
             self.p.access(r['target'],'read')
             out=self.read_op(r)
-            if len(json.dumps(out,ensure_ascii=False,separators=(',',':')).encode())>self.limit('response_bytes'):raise ReadFault('LIMIT_EXCEEDED')
+            if len(jcs_bytes(out))>self.limit('response_bytes'):raise ReadFault('LIMIT_EXCEEDED')
             return out
         except ReadFault as e:return fail(e.code)
     def inspect(self,t,oid):

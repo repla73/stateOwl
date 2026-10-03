@@ -60,7 +60,7 @@ def request_valid(r):
         if set(a)!={'snapshot'} or not isinstance(a['snapshot'],dict) or set(a['snapshot'])!={'id'} or not isinstance(a['snapshot']['id'],str) or not a['snapshot']['id']:return False
     elif a.get('current') is True:
         if set(a)-{'current','assert_snapshot'}:return False
-        if 'assert_snapshot' in a and (not isinstance(a['assert_snapshot'],dict) or set(a['assert_snapshot'])!={'id'} or not isinstance(a['assert_snapshot']['id'],str)):return False
+        if 'assert_snapshot' in a and (not isinstance(a['assert_snapshot'],dict) or set(a['assert_snapshot'])!={'id'} or not isinstance(a['assert_snapshot']['id'],str) or not a['assert_snapshot']['id']):return False
     else:return False
     recs=r['records']
     if not isinstance(recs,list) or not recs:return False
