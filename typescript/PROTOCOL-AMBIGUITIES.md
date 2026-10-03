@@ -1,11 +1,21 @@
 # R2 protocol ambiguity / missing normative input
 
-## A01 — native `.state` fixture/profile is absent from the frozen basis
+## A01 — native `.state` fixture/profile
 
-The R2 assignment requires an agreed bounded existing-project-state fixture/profile. The frozen basis does not provide one.
+**Status: RESOLVED**
 
-`docs/ARCHITECTURE-DECISION.md` states that a native resolver would begin at `.state/current.json`, but also requires an actual sanitized Governance fixture before compatibility is claimed. `docs/protocol/PROTOCOL.md` R6 explicitly states that native Governance compatibility is not claimed by the synthetic corpus.
+The original R2 candidate correctly reported that the frozen basis did not contain a shared native project-state fixture/profile.
 
-There is therefore no normative mapping that independently determines which native `.state` files, routes, projections, or profile identity must be used for this R2 fixture. Guessing those semantics from Governance or from another implementation would violate the independence rule.
+The coordinator subsequently defined the shared fixture at:
 
-Impact: core reads, router-v1, GitHub/local Git, opaque non-Git, legacy goldens, conformance, and benchmarks are unblocked. Only `native_state_fixture` remains blocked pending a normative fixture/profile addition.
+`r2/native-state-fixture@60733bc765e029ebfde6102f5f2c265192cf95d9`
+
+The TypeScript qualification consumes those exact fixture bytes and executes all eight coordinator cases through the independent TypeScript `Reader`.
+
+The fixture establishes direct focused reads over project-owned `.state` bytes without:
+
+- requiring `.stateowl/router.json`;
+- creating a duplicate authoritative index;
+- importing Governance lifecycle/policy semantics into stateOwl core.
+
+No frozen R1/R2 protocol rule was reinterpreted and no TypeScript reader/provider implementation change was required.
