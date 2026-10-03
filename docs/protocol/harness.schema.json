@@ -1,0 +1,264 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:stateowl:fixtures:2",
+  "title": "R1 test containers (not protocol messages)",
+  "$defs": {
+    "Case": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "rules": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "request": {
+          "type": "string",
+          "minLength": 1
+        },
+        "expected": {
+          "type": "object"
+        },
+        "request_patch": {
+          "type": "object"
+        },
+        "world": {
+          "type": "string",
+          "minLength": 1
+        },
+        "world_patch": {
+          "type": "object"
+        },
+        "cap_patch": {
+          "type": "object"
+        },
+        "trace": {
+          "type": "object"
+        },
+        "request_bytes": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "rules",
+        "request",
+        "expected"
+      ],
+      "additionalProperties": false
+    },
+    "Fault": {
+      "type": "object",
+      "properties": {
+        "method": {
+          "enum": [
+            "access",
+            "resolve",
+            "inspect",
+            "file",
+            "tree",
+            "validate",
+            "admit",
+            "token_check",
+            "token_issue"
+          ]
+        },
+        "at": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "phase": {
+          "enum": [
+            "before",
+            "after"
+          ]
+        },
+        "code": {
+          "type": "string",
+          "minLength": 1
+        },
+        "replace": {},
+        "mutate": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "method"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "anyOf": [
+            {
+              "required": [
+                "code"
+              ]
+            },
+            {
+              "required": [
+                "replace"
+              ]
+            },
+            {
+              "required": [
+                "mutate"
+              ]
+            }
+          ]
+        },
+        {
+          "not": {
+            "required": [
+              "code",
+              "replace"
+            ]
+          }
+        }
+      ]
+    },
+    "World": {
+      "type": "object",
+      "properties": {
+        "target": {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "minLength": 1
+            },
+            "authority": {
+              "type": "string",
+              "minLength": 1
+            },
+            "resource": {
+              "type": "string",
+              "minLength": 1
+            },
+            "namespace": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "kind",
+            "authority",
+            "resource",
+            "namespace"
+          ],
+          "additionalProperties": false
+        },
+        "head": {
+          "type": "string",
+          "minLength": 1
+        },
+        "next_snapshot": {
+          "type": "string",
+          "minLength": 1
+        },
+        "native": {
+          "type": "boolean"
+        },
+        "algorithm": {
+          "enum": [
+            "sha1",
+            "sha256"
+          ]
+        },
+        "validation": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "objects": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object"
+          }
+        },
+        "authenticated": {
+          "type": "boolean"
+        },
+        "authorized": {
+          "type": "boolean"
+        },
+        "validator_available": {
+          "type": "boolean"
+        },
+        "project_authorized": {
+          "type": "boolean"
+        },
+        "continuity": {
+          "enum": [
+            "intact",
+            "unknown",
+            "reset"
+          ]
+        },
+        "auth_scope": {
+          "type": "string",
+          "minLength": 1
+        },
+        "tokens": {
+          "type": "object"
+        },
+        "external": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/World"
+          }
+        },
+        "faults": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Fault"
+          }
+        },
+        "protected_path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "allow_policy_change": {
+          "type": "boolean"
+        },
+        "head_after_resolve": {
+          "type": "string",
+          "minLength": 1
+        },
+        "head_after_admit": {
+          "type": "string",
+          "minLength": 1
+        },
+        "next_due": {
+          "type": "integer"
+        },
+        "executor_time": {
+          "type": "integer"
+        },
+        "conceal_absence": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "target",
+        "objects"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "oneOf": [
+    {
+      "$ref": "#/$defs/Case"
+    },
+    {
+      "$ref": "#/$defs/World"
+    }
+  ]
+}

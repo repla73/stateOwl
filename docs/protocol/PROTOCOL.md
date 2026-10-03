@@ -1,150 +1,142 @@
-# stateOwl protocol — 0.2 draft 1
+# stateOwl protocol — 0.2 draft 2
 
-**Identifier:** `stateowl/0.2-draft.1`  
-**Status:** Normative working draft; R1 in progress. Not a stable release or an implementation claim.  
-**Basis:** [Charter](../../CHARTER.md) and [architecture decision](../ARCHITECTURE-DECISION.md).  
-**Companions:** [Schema](schema.json) · [Fixtures and remaining work](README.md).
+**Identifier:** `stateowl/0.2-draft.2`  
+**Status:** Normative working draft for independent R1 re-audit; not stable.  
+**Basis:** [Charter](../../CHARTER.md), accepted architecture and the R1 correction assignment. The archived architecture's historical status text is unchanged.
 
-## 1. Scope and conformance
+The normative set is this document, [Git binding](git-binding-v1.md), [legacy router binding](router-v1.md), and [schema](schema.json). [HARNESS.md](HARNESS.md) specifies the test interface, not a production adapter. A contradiction among these or the expected fixtures is a defect; implementations MUST NOT choose the weaker interpretation. MUST, MUST NOT, SHOULD and MAY have BCP 14 meanings [N1].
 
-The uppercase words MUST, MUST NOT, SHOULD and MAY use BCP 14 meanings [N1]. These requirements apply to implementations claiming this exact draft, not to the existing 0.1.0 package. Package versions, router versions, protocol versions and project rules are independent.
+## 1. Capabilities and trust
 
-A reader MUST implement `read`. `publish`, `observe`, named routing and linked expansion are separately declared capabilities. An unsupported operation MUST fail explicitly; a binding MUST NOT substitute unguarded writes. No scheduler, task lifecycle, approval model, claim format, identity service or transport is required.
+**C1.** A reader implements `read`. Publication, observation, routing and expansion are separately advertised. A capability document describes an endpoint; an endpoint without `read` is not a conforming reader, but MUST return `UNSUPPORTED_CAPABILITY` for a read. Supply capabilities through trusted installation/configuration or discovery, not necessarily another model call. There is no automatic fallback to a weaker operation.
 
-The schema uses JSON Schema 2020-12 [N2]. It describes message structure; it cannot prove source integrity, permission, atomicity, unique selected keys, admission or temporal facts. This document supplies those requirements. A contradiction between prose, schema and fixtures is a draft defect, not permission to choose weaker behavior.
+`Capabilities.operations`, `formats`, `features` and `resolvers` are closed declarations. `features` contains `routes` and/or `expand`; a nonempty features list requires installed resolver identities. A publication declaration is present exactly when `publish` is advertised. It identifies authority enforcement, continuity and receipt storage. `receipt_retention: "reachable_history"` means receipts reside in the immutable reachable history, with **no wall-clock availability promise**. Reconciliation is bounded by `limits.reconcile_commits`; unavailable objects or expiry of an operator's retention policy never justify a negative admission claim. The Git binding further narrows this guarantee. This draft standardizes one writable receipt binding, for Git; other providers may implement reads/observation, but cannot invent a publication guarantee under that binding identifier.
 
-**C1.** Before use, a binding MUST supply the `Capabilities` object through installation/configuration or discovery. Discovery need not require a model turn. The `features` list declares `routes` and/or `expand`; `resolvers` lists their installed exact bindings. A nonempty features list requires at least one resolver; without those features the resolver list is empty. Declared limits are positive maxima, not implied performance promises. Writers MUST disclose continuity assumptions, receipt retention and whether project validation is enforced. A mechanical-only writer MUST NOT represent repository access as project authority.
+**C2.** Repository permission, project authority, semantic validity and external-effect permission are distinct. Trusted installation maps semantic bindings to local implementations. Requests and repository content cannot install code, grant permission, select an unapproved validator, or weaken the configured authority policy. Claims, leases, schedules and external-effect recovery remain project/executor responsibilities. This draft creates no task engine or hosted service.
 
-## 2. Identity and addressing
+## 2. Identity
 
-**I1.** A `Target` is the tuple `kind`, `authority`, `resource`, `namespace`. Its canonical spelling comes from the provider's trusted configuration. A caller MUST NOT redirect credentials merely by changing these strings. Locators contain no secrets or authority grants. Aliases require an explicit trusted mapping; matching unscoped IDs do not establish equivalence.
+**I1.** `Target` is the case-sensitive tuple `(kind, authority, resource, namespace)`. Trusted configuration supplies its canonical spelling and any explicit alias mapping **before** forming a request. An adapter MUST reject an unrecognized or unauthorized target rather than redirect credentials. Access transport is not identity: local Git and GitHub API access to the same configured repository use the same target. A move or provider migration needs an explicit mapping; equal unscoped strings prove nothing.
 
-**I2.** A `Snapshot` contains `id` and `generation`. Both are opaque, case-sensitive strings outside their provider binding. Comparison is scoped to the complete target and generation. A generation identifies a namespace incarnation; it is not a new generation for every update. A reset, recreation or migration MUST NOT silently reuse an old incarnation's authority. The binding MUST disclose how generations and continuity are established. Git does not inherently supply a namespace-incarnation counter; a trusted append-only configuration may supply the generation only while its stated continuity assumptions hold. Suspected discontinuity requires reconciliation, not invented certainty.
+**I2.** `Snapshot` is exactly `{ "id": <nonempty string> }`. Equality is scoped to the complete target. The provider binding defines the identifier's type; Git uses algorithm-tagged commit IDs. Non-Git bindings may use opaque immutable IDs. No universal namespace generation exists. An exact snapshot establishes immutable content/version identity, **not** continued namespace existence, authority or absence of intervening resets.
 
-**I3.** A current read uses `at: {"current": true}`. It MAY add `assert_snapshot` inside `at`, meaning the resolved current snapshot must equal that value. An exact read instead uses `at: {"snapshot": {...}}`. Combining the modes is invalid. An exact read does not assert present-day currentness or retained namespace authority.
+Ordinary Git cannot detect delete/recreate or A→B→A from equal sampled heads. Writable Git therefore requires an explicitly trusted append-only admission policy, not an invented generation or a conclusion drawn from two equal reads. Known or suspected discontinuity blocks new publication. Unresolved dispatched work stays unresolved after reset. Recovery after a reset requires project-authorized reconciliation and, for a new write domain, a new canonical namespace; this protocol does not perform that setup. Exact reads may still succeed after deletion/reset when the requested objects remain authorized and available.
 
-A portable handoff is a `ReadRequest` with a frozen `at.snapshot` and the required selections. It is data, not an instruction to perform work. No custom URI scheme is defined by this draft.
+**I3.** A `Binding` is one opaque, immutable, publisher-assigned ASCII semantic identifier, at most 256 characters. Examples are `urn:stateowl:binding:router-v1:1` and `urn:example:validation:3`. Its specification fixes all behavior-affecting configuration, including routing conventions and validation rules. Different implementations of those semantics use the **same identifier**. A behavior/configuration change requires a new identifier. Identifiers MUST NOT mean hashes of implementation code, packages, executables or filesystem paths. No lookup or remote code loading is implied. A trusted map must not bind the same identifier to different semantics; common fixtures test that obligation.
 
-**I4.** Paths are nonempty, relative POSIX paths. Reject leading/trailing slash, empty components, `.` or `..` components, backslash, ASCII control characters and DEL. Do not percent-decode or Unicode-normalize path identity. Provider escaping must preserve the logical path, including literal percent signs. Providers MAY reject unsupported names but MUST NOT silently substitute another path. Detect file/directory prefix collisions before publication. Never follow symlinks or submodules as ordinary state records.
+A read's `resolver` pins those semantics. A publish request's required `validation` is a **pin assertion**, not an authorization choice: the adapter independently resolves the required binding from trusted configuration and the expected state, then requires equality. `null` is legal only when that independent resolution says the project permits mechanical-only publication. Retain this assertion for recovery even if newer local defaults change.
 
-## 3. Encoding and limits
+**I4.** Paths are nonempty relative POSIX paths: no leading/trailing slash, empty, `.` or `..` component, backslash, ASCII control or DEL. Do not percent-decode or Unicode-normalize them. Literal `%2F` is not `/`. File/directory prefix collisions are invalid. Do not follow symlinks or submodules as ordinary records. Provider-specific unsupported names are rejected, never substituted.
 
-**J1.** Wire messages are UTF-8 JSON without a BOM. Reject duplicate object keys at every depth, invalid UTF-8, unpaired surrogate values, non-finite numbers and invalid JSON grammar before dispatch. Wire objects are closed except for project JSON in `value`. Unknown protocol versions fail with `UNSUPPORTED_VERSION`; no version guessing is allowed.
+## 3. Serialization and bounds
 
-**J2.** Metadata integers MUST be in the range 0 through 9007199254740991. Structured source JSON MUST preserve numerical value: integral values outside the signed safe-integer range fail with `NUMBER_UNREPRESENTABLE`. For a nonintegral value, its exact decimal value must equal the decimal value of its RFC 8785/ECMAScript binary64 round-trip spelling. Otherwise return `NUMBER_UNREPRESENTABLE`; do not round silently. Raw `text` and `base64` reads remain available by an explicit new request. Apply source JSON validity checks to the entire record before projection. These are draft interoperability restrictions, not permission to rewrite stored bytes.
+**J1.** Wire objects are UTF-8 JSON without BOM; keys are unique at every depth. Reject invalid UTF-8, unpaired surrogates (including in keys), NaN/Infinity, invalid grammar and negative zero spellings (`-0`, `-0.0`, `-0e3`). Object member order and whitespace do not affect semantic equality. Arrays preserve order except the explicitly normalized publication change set. JSON Schema 2020-12 describes structure; the rules here also apply when messages originate as native objects.
 
-**J3.** `json` means structured JSON; `text` means exact UTF-8 text; `base64` means RFC 4648 standard alphabet with required padding, zero pad bits and no whitespace [N3]. Do not infer format from an extension. UTF-8 decoding and base64 decoding MUST preserve all original bytes. Only `json` supports projection. Raw source bytes, including whitespace and final newlines, determine the SHA-256 digest.
+**J2.** Metadata integers are safe nonnegative integers, at most 9007199254740991. For a structured source JSON number, parse its mathematical decimal value before rounding. An integral value must lie in the signed safe-integer range. A nonintegral value is accepted only if its decimal value equals the decimal value of the RFC 8785 / ECMAScript binary64 round-trip serialization of that number. Otherwise return `NUMBER_UNREPRESENTABLE`. Thus `0.1` is supported, but `0.10000000000000001` is not; `1.0` is the number 1. Reject negative zero before conversion. These checks cover the **entire source before projection**. Explicit text/base64 reads preserve data outside this structured domain. Never rewrite stored records to satisfy it.
 
-**J4.** Enforce request-byte, record-byte, response-byte, selection, expansion, mutation and reconciliation limits. Counts and byte limits refer to decoded record bytes and UTF-8 wire bytes as applicable. Bounds MUST be checked before unbounded buffering or traversal. Exceeding any limit returns `LIMIT_EXCEEDED`, never a truncated successful result. For an already dispatched publication, preserve the outcome rules in section 6 even when a later bound is hit.
+**J3.** `json`, `text` and `base64` are explicit representations. Text decodes exact UTF-8 and may preserve a source BOM as a character; source JSON forbids BOM. Base64 is RFC 4648 standard alphabet, required padding where needed, zero pad bits and no whitespace. Re-encoding decoded bytes must reproduce the input. Only JSON objects support field projection. SHA-256 content digests cover exact original bytes, including whitespace and final newline.
+
+**J4.** Limits are positive maxima. `request_bytes` bounds actual UTF-8 request bytes (a native request is measured using RFC 8785); `record_bytes` bounds each decoded source, individual put, or provider metadata object; `mutation_bytes` bounds the sum of decoded puts; `records`, `expansions` (total requested links), `changes`, `tag_hops`, `reconcile_commits`, and `json_depth` bound their named work. A root JSON object/array has depth 1. `response_bytes` measures RFC 8785 UTF-8 bytes of the semantic response, excluding transport framing, and is at least 1024 so an error fits. Physical transport overhead is a separate binding limit, not a hidden success truncation.
+
+Check byte/depth bounds before unbounded buffering or traversal. On source reads, a size violation precedes integrity/parse checks. An oversized successful response becomes `LIMIT_EXCEEDED`, never a partial success. After dispatch, bounds preserve publication certainty: admitted-but-unverified is still `verification_pending`.
+
+**J5.** Receipt identities use **RFC 8785 itself, restricted to the closed `PublicationIdentity` schema**, not a JCS-like serializer. Its property names are fixed ASCII; values are Unicode scalar strings, safe nonnegative integers, booleans, arrays or null. There are no source JSON objects or floating-point numbers in this envelope. Recursively sort property names by UTF-16 code units, use RFC 8785 string escapes and integer spelling, and emit UTF-8 without whitespace/BOM/final newline. Source bytes are hashed separately, not canonicalized. General RFC 8785 serialization is also the deterministic response-size metric. [N2–N4]
 
 ## 4. Read
 
-A `ReadRequest` selects one target, one `at` and a nonempty ordered array of `records`. Each selection has a unique `key`, either a `path` plus explicit `format`, or a `route`. It MAY include exact top-level `select` names, `optional: true`, and named `expand` entries. Absent `optional` means required. Absent `expand` means no expansion. Empty `select` requests an empty projected object; absent `select` requests the whole direct record or the route's declared default.
+**R1.** `at` is either `{current:true, assert_snapshot?:Snapshot}` or `{snapshot:Snapshot}`. A current logical read resolves the root mutable ref **once**, then pins every root dependency to that snapshot. An exact read performs **zero** mutable-ref resolutions, including for expanded exact origins. An assertion mismatch returns `CONFLICT` before reading records. Currentness refers to the resolution point, not the end of the call.
 
-**R1.** Resolve a current root exactly once, then use that immutable snapshot for every root record and routing dependency. An exact-snapshot read performs zero mutable-ref resolutions. If `assert_snapshot` fails, return `CONFLICT` before record reads. A ref movement during the read MUST NOT mix snapshots. Currentness is only asserted at the resolution point.
+**R2.** The nonempty `records` array has unique selection keys. Each item names a direct `path` plus `format`, or a `route`. Omitted `optional` means false; omitted/empty `expand` means none. Direct paths need no router. Require `resolver` exactly when a route or nonempty expansion is requested; an unused resolver field is invalid. Fetch each distinct `(target, snapshot, path)` once per logical read, apart from bounded transport retries. Share routing reads and do not enumerate unrelated records/history.
 
-**R2.** Direct paths require no router. Fetch each distinct `(target, generation, snapshot, path)` at most once per logical read, apart from bounded transport retries. Routing dependencies share this cache. Unrelated state, history and directories MUST NOT be enumerated or returned by the focused read. Trace instrumentation may expose these operations to conformance tests without exposing them to the model.
+**R3.** A successful response has **exactly one record per requested selection, in request order**, with the same key. An authorized missing optional path produces one `absent` result; no other error becomes absence. Unknown routes, unavailable snapshots, hidden denials and missing required links remain errors. The operation is all-or-error: errors have no partial records.
 
-**R3.** A present `select` contains unique top-level JSON property names. Project only those properties in the requested order; preserve their values. The result MUST include `select` and a `missing` array containing the absent names in that order. Do not invent nulls. Selecting fields from a non-object JSON value is `INVALID_REQUEST`. No `select` or `missing` is emitted for an unprojected value. A projection is never presented as a complete source record.
+A `select` array contains unique exact top-level property names; an empty array selects `{}`. For direct JSON, omission selects the whole value; a route supplies its documented default. A projected result includes its effective `select` and `missing` names in selection order. Omit absent properties; do not synthesize null. An unprojected result omits both fields. Projection of a non-object is `INVALID_REQUEST`. JSON object insertion order is not an interoperability requirement.
 
-**R4.** Required records are all-or-error. An optional selection MAY return `status: "absent"` only when authorized absence at the exact snapshot is established. A provider response concealing access denial is `NOT_FOUND_OR_FORBIDDEN`, not optional absence. Unknown routes are errors, even if optional. Snapshot loss, integrity failure and denial cannot be converted to absence. Failure returns no partially successful `records` array.
+**R4.** Process selections in request order, each parent before its expansions, and expansions in requested order. For each found parent return exactly one found child per requested expansion; an optional absent parent has no expansions; omit `expanded` when none was requested. Expansion is one level only. Malformed unrequested links are not interpreted, though whole-source JSON validity still applies. Different stores or snapshots require exact `origin:{target,snapshot}`, separate authorization and no mutable lookup. Omit `origin` only when both target and snapshot equal the response root. Cross-store results are not a distributed atomic snapshot.
 
-**R5.** Each found record includes its selection `key`, format, value and `Source`. A source contains normalized path, `sha256:<64 lowercase hex>` raw-byte digest, and integrity level. Include the native object ID when the provider supplies one. `provider` means the adapter trusts the provider's snapshot/path association while checking returned byte identity. `object_chain` additionally requires independent verification of the full native association to the exact snapshot. Neither level proves author identity, authority or currentness.
+**R5.** Found records contain format, value and `Source`. Sources carry path, SHA-256 of raw bytes and actual integrity level. Return a typed native object ID when supplied. `provider` means verified byte identity with provider-trusted snapshot/path association; `object_chain` additionally requires independent native-chain verification. Neither proves actor identity or project authority. A routing result is present exactly when the request contains a resolver, identifies that binding, and lists distinct routing sources in first-use order. These are actual routing dependencies, not a dump of selected records.
 
-**R6.** Named routes require a requested, installed `resolver` binding (`id` and exact digest). The request selects a trusted implementation; it cannot install or authorize code. Return the binding and all routing source provenance. All same-target routing data MUST come from the root snapshot; externally configured logic is identified by its binding digest. If authoritative configuration requires a different resolver version, reject the request. Project rules determine which context is sufficient for work; a small projection alone never authorizes execution.
+**R6.** The [router-v1 binding](router-v1.md) is the supported compatibility convention, not a mandatory universal layout. Other profiles must define and pin their own resolver semantics and fixtures. Do not create duplicate `.stateowl` metadata for existing project-owned `.state` layouts. No native Governance compatibility is claimed by this synthetic corpus.
 
-**R7.** Expansion is explicit, one level, and resolved by that same trusted resolver. Expanded entries cannot themselves expand. Each requested link is required. External targets or different snapshots need exact `origin: {target, snapshot}` provenance, separate authorization and no mutable lookup. Return these sources as separately pinned reads, not a distributed atomic snapshot. Unrequested links MUST NOT be followed. An external link lacking exact binding fails with `EXACT_SNAPSHOT_REQUIRED`.
+## 5. Publication identity and dispatch
 
-## 5. Publication input and receipt
+**P1.** `PublishRequest` contains target, expected snapshot, required `validation` pin, `mode` (`submit` or `reconcile`), and nonempty whole-record puts/deletes. There is no operation ID. `submit` means a new attempt with no unresolved earlier dispatch by this caller; after uncertainty, use `reconcile` with the retained identical transition. `reconcile` NEVER dispatches admission. Changing mode is not changing the logical transition.
 
-A `PublishRequest` supplies one target, `expected` snapshot, `operation_id` and a nonempty ordered array of whole-record `changes`. A change is a `put` of exact UTF-8/base64 bytes or `delete: true`; never both. There is no patch language. An operation ID is scoped to `(target, expected generation, expected id)`.
+A put supplies exact UTF-8 or canonical base64 bytes. Reject duplicate paths and any prefix collision even when one item deletes a parent. Preserve untouched records and metadata. Existing regular-file mode is preserved; new Git files use `100644`. No mode-change field, symlink/submodule mutation, implicit namespace creation or directory replacement is supported. Deleting a missing record is `NOT_FOUND`. A total byte/mode-identical candidate is `NO_CHANGE`; a redundant unchanged put inside a nonempty effective transition is allowed.
 
-**P1.** Check request shape, capability, target authorization, duplicate and colliding paths, supported file kinds and decoded size bounds. Reject deletion of a missing record with `NOT_FOUND`, and a byte/mode-identical total candidate with `NO_CHANGE`. Preserve every untouched record and metadata. Namespace creation, reset, migration and product publication are not implicit side effects of `publish`.
-
-**P2.** Resolve applicable authority and validator from trusted configuration and the expected state, independently of caller assertions. Validate the complete old state and candidate together. Candidate rules cannot approve their own weakening. Caller-supplied `validated`, validator code or access tokens are not accepted wire fields. A project's stronger validation requirements cannot be bypassed by selecting mechanical-only mode.
-
-**P3.** Compute `request_digest` as `sha256:` plus the SHA-256 of RFC 8785 canonical UTF-8 for the following object [N4]:
+**P2.** Normalize the changes as a set sorted by the UTF-8 bytes of path (unsigned lexicographic order). A put becomes `{path,put:{digest:<raw SHA-256>,bytes:<decoded length>}}`; a deletion becomes `{path,delete:true}`. Form exactly:
 
 ```json
-{
-  "protocol": "stateowl/0.2-draft.1",
-  "target": {"kind": "...", "authority": "...", "resource": "...", "namespace": "..."},
-  "expected": {"id": "...", "generation": "..."},
-  "operation_id": "...",
-  "changes": [{"path": "...", "put": {"digest": "sha256:...", "bytes": 1}}],
-  "validation": null
-}
+{"protocol":"stateowl/0.2-draft.2","target":{},"expected":{"id":"..."},"changes":[],"validation":null}
 ```
 
-Keep request change order. A deletion contributes `{path, delete: true}`. Decode each put before hashing; UTF-8 and base64 encodings of identical bytes have the same descriptor. `validation` is the exact trusted `Binding`, or null only when project validation is not required. The preimage contains only the fixed ASCII property names shown, strings, booleans, safe nonnegative integers, arrays and null. No floating-point numbers or arbitrary project objects enter it. Do not canonicalize original record bytes.
+Here `target`, `changes` and `validation` contain their actual schema-defined values. `request_digest` is `sha256:` plus the SHA-256 of J5 canonical bytes. `mode`, transport, source encoding choice, timestamps and implementation artifacts are excluded. Reordering distinct simultaneous changes or representing equal bytes as UTF-8/base64 preserves identity. Changing target, expected state, path, bytes or semantic validation pin changes identity. It is a replay identity, not a grant of authority or an external-effect idempotency key.
 
-**P4.** Store the receipt binding `expected`, `operation_id`, `request_digest` and `validation` atomically with the admitted snapshot. The provider may use immutable commit metadata rather than a new project file. Snapshot identity is added to the returned receipt; it cannot be embedded in its own hash preimage. Retain the exact request and any provider candidate locator before dispatch so another session can reconcile. No mandatory external receipt database is introduced.
+**P3.** Before dispatch retain the exact transition, validation pin and computed identity outside disposable process memory as required by the caller's recovery policy. Independently resolve authority/validation at the expected state, construct the complete old and candidate states, and validate them together. Candidate rules cannot approve their own weakening. A pin mismatch is `VALIDATION_FAILED`; unavailable trusted code is `UNSUPPORTED_CAPABILITY`; missing expected state is `SNAPSHOT_UNAVAILABLE`.
 
-## 6. Admission, uncertainty and replay
+**P4.** Atomically compare the entire namespace to `expected` and admit all changes **and the receipt** together. Disjoint stale writers conflict too. Do not rebase, merge, force-reset, or emulate atomic publication with sequential file writes. Providers lacking this primitive cannot advertise publication. The [Git binding](git-binding-v1.md) defines its portable receipt and bounded recovery procedure. Creating an object is not admitting it to the namespace.
 
-**P5.** Atomically compare the entire namespace version to `expected` and admit all changes plus receipt together. A stale disjoint change is still a conflict. At most one competing transition from the same version can be admitted under the declared continuity model. Sequential file writes, automatic rebase and automatic merge are not conforming substitutes.
+## 6. Outcomes and recovery
 
-**P6.** Publication returns one of four mutually exclusive outcomes:
+**P5.** Once request stages 0–1 succeed, every publication result contains `request_digest` exactly once. They do not echo target, expected, validation, changes, mode or an operation ID; retain the request alongside the result. This pair is the portable receipt/continuation record. The committed snapshot is scoped by that retained target and digest. Malformed wire requests instead use the generic error envelope described below.
 
-| Outcome | Evidence required | Next action |
+| `outcome` | Required additional fields | Exact meaning |
 |---|---|---|
-| `committed` | Admission is established; a fresh check verified the receipt, entire intended delta and preserved remainder at the admitted snapshot. | Continue; resolve current state again when needed. |
-| `not_committed` | This exact request is known not to have been admitted. | Correct input/permission, or read and revalidate a new transition after conflict. |
-| `verification_pending` | Admission is established, but required verification has not completed. | Verify that same publication; do not submit new work. |
-| `indeterminate` | Admission cannot be established or excluded. | Reconcile the retained request; no new operation ID or rebased retry. |
+| `committed` | `snapshot`, `observed_head` | Admission established and a fresh check verified receipt, intended candidate and preserved remainder. |
+| `not_committed` | `error` | This fresh submission was excluded, or reconciliation proved another child of the expected state won under intact continuity. |
+| `verification_pending` | `snapshot`, `error` | Admission of this identified publication is established, but verification is incomplete or failed. |
+| `indeterminate` | `error` | Admission has not been established or excluded. |
 
-`committed` returns a receipt and `observed_head`. They MAY differ: an admitted, verified successor does not invalidate this publication. `verification_pending` returns the admitted snapshot but MUST NOT return a verified receipt. `indeterminate` MAY return a candidate snapshot; candidate existence is not admission evidence. `not_committed` MUST NOT carry admitted/candidate/receipt fields.
+No other fields are legal for these variants. A later valid successor can be `observed_head` without invalidating an earlier verified `snapshot`. Pending/indeterminate always use retry `reconcile`.
 
-**P7.** A timeout after dispatch MUST initially remain `indeterminate` unless stronger evidence resolves it. A positive admission acknowledgment followed by read failure is `verification_pending`. Seeing the expected head again, seeing a candidate object, or matching a commit message alone is insufficient to infer failure or success. Cancellation does not undo an admission. Bindings that lose the entire response must tell callers to reconcile rather than synthesize a rejection.
+**P6.** A pre-dispatch failure on a fresh submit can be `not_committed`; it does **not** negate an earlier unreported attempt. A caller with any possible earlier dispatch MUST use `reconcile`. A lost response after dispatch is `indeterminate`, not conflict. A positive admission acknowledgment followed by any verification failure is `verification_pending`, even for corruption, retention, permission or limit failures. An expected head reappearing, an orphan candidate or a matching message alone proves neither success nor failure. Within a call, never discard stronger admission evidence because a later read failed. Across calls, the caller MUST retain and combine prior trusted results: a new binding unable to authenticate an earlier acknowledgment may return `indeterminate` for its new probe, but that does not downgrade the caller's previously established admission evidence. This draft does not turn a caller-supplied snapshot into a portable authenticated admission proof.
 
-**P8.** Replay the identical retained request under the original expected state. Recover the original receipt when proven. A matching receipt requires checking its actual parent/version relation and complete delta, not only its operation ID. Reuse of a proven replay identity with different descriptors or validation is `OPERATION_ID_REUSE`; it rejects the new payload without denying that the earlier payload may have committed. Same-key attempts racing without a receipt still rely on the expected-state guard, not a fictitious global idempotency service.
+A submit that reaches an expected-state conflict MUST run bounded reconciliation before claiming logical conflict, so a concurrent identical transition can return its verified receipt. No response-loss path automatically retries admission. Recovery failures before evidence on a `reconcile` call remain `indeterminate`, including capability, authorization and unavailable validator/history failures. Reconciliation checks the **retained** validation identity, not a new local default, and does not rerun changed business rules to deny historical admission.
 
-**P9.** Bound reconciliation. Missing admission history, exhausted search, retention expiry or discontinuity while an outcome remains unresolved yields `indeterminate`. A generation mismatch detected before any possible dispatch can be `not_committed`; a reset after ambiguous dispatch cannot. An adapter MUST NOT redispatch into a reset namespace using an old replay scope. Append-only continuity is a real precondition, not an inference from two equal head observations.
+**P7.** Reconciliation is read-only. A matching receipt on the proved linear history establishes admission; verify its expected parent, canonical request identity, complete candidate tree and unchanged remainder. Exhausted lookup, missing history, unknown continuity or a reset produces uncertainty. A proven different child of the expected commit excludes the retained transition only under the declared intact append-only policy. Seeing the expected head alone does not exclude an in-flight request. Do not redispatch an old transition into a recreated namespace.
 
-**P10.** Atomicity ends at the target namespace. Claims, lease clocks, deployment effects and target-side idempotency remain project/executor concerns. A successful state publication does not prove an external action ran exactly once.
+**P8.** This transaction covers one namespace. It cannot atomically include product branches, other repositories or external effects. No exactly-once external execution guarantee is made.
 
-## 7. Observation
+## 7. Optional observation
 
-An `ObserveRequest` supplies a target and optionally the same `records`/`resolver` scope as a read. Without records, observe the namespace head; with records, observe all raw record and routing dependencies, including explicitly expanded exact origins. A prior opaque `token` is optional. No record bodies are returned.
+**O1.** Observe head-only or the same records/resolver scope as read, with an optional prior opaque token. First observation returns `baseline`; later ones return `changed` or `unchanged`. Tokens bind target, normalized selectors, semantic resolver, raw record/routing dependencies (including regular-file modes and proven absence), exact external origins and trusted authorization scope. Normalize only omitted `optional` to false and omitted `expand` to an empty array; preserve all other selector fields and their order. Omit an unused resolver from token scope. Foreign, forged, expired or scope-mismatched tokens produce `TOKEN_INVALID`, not an implicit new baseline. Token encoding is binding-specific: different token bytes are explicitly outside cross-binding equality; establish a new baseline when changing token services.
 
-**O1.** The first authorized observation returns `status: "baseline"`, snapshot and token. A subsequent observation returns `changed` or `unchanged`. Tokens MUST bind the target, generation, selection, resolver identity, dependency set and authorization scope; they are not authority grants. A mismatched, forged or expired token is `TOKEN_INVALID`. A token format may remain binding-specific; cross-plane handoff can establish a new baseline.
+**O2.** Authorization and current authoritative observation are mandatory. A scoped observation compares all raw dependencies, not only projected values. It may suppress unrelated head changes after checking that dependency set. `unchanged` means equality at successful observations, **not no intervening updates/ABA**. Known discontinuity produces `NAMESPACE_DISCONTINUITY`; outages, hidden denial and missing namespace produce errors. Observation cannot establish append-only publication authority from its token. Exact dependency identities remain scoped to their targets.
 
-**O2.** `unchanged` requires a successful current authoritative observation and a valid same-scope comparison. An outage, denied access, changed generation or unverifiable token MUST NOT become `unchanged`. Head-level `changed` can be a false positive for task eligibility; a scoped implementation may suppress unrelated changes only after checking all dependencies. A webhook is a hint, not a state proof.
+**O3.** Observe returns no record bodies, invokes no model and performs no publication. Due dates, lease expiry, retry deadlines, credential changes and eligibility remain executor concerns even at an unchanged head. Events are hints to re-observe, not admission evidence.
 
-**O3.** Observation itself invokes no model and performs no publication. An executor MUST separately check due times, lease expiry, retry deadlines and policy changes; unchanged bytes do not establish ineligibility. Scheduling and eligibility are not protocol operations.
+## 8. Determinism and errors
 
-## 8. Errors
+**E1.** Evaluate the following stages in order; do not probe later stages just to find a preferred error. Within record work use R4 order; within publication changes use P2 path order. This orders observable **logical** checks, not network batching. A batched implementation must select the same first logical failure and avoid unauthorized disclosure.
 
-Errors contain stable `code`, bounded human-readable `message` and `retry` disposition. `retry` is one of `never`, `after_correction`, `after_backoff`, `after_refresh`, `reconcile`. It is advice, not an automatic execution instruction. A publication error always retains its section 6 outcome. Unknown/unparseable operation input may use `op: "unknown"` only before dispatch. Validly identified publish requests use `PublishResult`, including validation and permission failures.
-
-| Codes | Meaning |
+| Stage | Precedence within the stage |
 |---|---|
-| `INVALID_REQUEST`, `UNSUPPORTED_VERSION`, `UNSUPPORTED_CAPABILITY` | Input or negotiated feature is unusable; no weaker fallback. |
-| `UNAUTHENTICATED`, `FORBIDDEN`, `NOT_FOUND_OR_FORBIDDEN` | Authentication/access or deliberately concealed existence. |
-| `NOT_FOUND`, `SNAPSHOT_UNAVAILABLE`, `EXACT_SNAPSHOT_REQUIRED` | Established absence, unavailable immutable history, or insufficient exact binding. |
-| `INVALID_SOURCE`, `NUMBER_UNREPRESENTABLE`, `INTEGRITY_MISMATCH` | Malformed source encoding/JSON, unrepresentable structured number, or byte/object mismatch. |
-| `LIMIT_EXCEEDED`, `RATE_LIMITED`, `PROVIDER_UNAVAILABLE` | A resource bound or transport/provider failure. |
-| `VALIDATION_FAILED`, `CONFLICT`, `NO_CHANGE`, `OPERATION_ID_REUSE` | A rejected transition or freshness assertion. |
-| `HISTORY_UNAVAILABLE`, `NAMESPACE_DISCONTINUITY`, `TOKEN_INVALID` | Recovery or observation scope cannot be trusted. |
+| 0. Framing | request-byte bound → UTF-8/BOM/depth guard → JSON grammar/duplicate keys/surrogates/numeric safety. |
+| 1. Request | missing/non-string protocol → unsupported protocol → schema and local semantics (keys, paths, canonical put bytes, collisions) → count/decoded-put bounds. |
+| 2. Capability | operation → representation → routing/expansion → installed requested resolver. |
+| 3. Access | authentication → target/path authorization. No source reads for denied targets. |
+| 4. Version/context | publication continuity → exact expected-state availability → trusted validation pin and expected-state project authority (submit only); for reads current/exact object resolution → assertion. For observe token scope follows access, before resolution. |
+| 5. Content | size → native/byte integrity → complete parse → binding shape → projection → ordered expansion; publication existing kinds/deletions → no-change → old+candidate project validation. |
+| 6. Effect | atomic admission → acknowledgment/uncertainty → fresh observation and verification. Post-dispatch certainty overrides ordinary retry advice. |
 
-If several faults apply, detect wire syntax/version/shape first, then capability, then authorization, then ordered record/transition validation. Do not leak state to unauthenticated callers merely to prioritize a more specific error. Post-dispatch outcome certainty overrides ordinary retry advice: pending/indeterminate results use `reconcile`.
+For recovery, stage 4 is continuity → bounded receipt discovery, then stage 5 is historical receipt/candidate verification; no candidate authorization or new admission runs. At the same provider call, use its single normalized reported fault; test providers specify that report rather than inventing a precedence among inaccessible server causes.
 
-## 9. Git and 0.1.0 compatibility
+**E2.** Error objects contain only `code` and the following deterministic `retry`. Human diagnostics stay outside the interoperable envelope. For any pending/indeterminate outcome override retry to `reconcile`.
 
-**G1.** Git snapshot IDs are `git:sha1:<40 lowercase hex>` or `git:sha256:<64 lowercase hex>` commit IDs. Generic code MUST accept non-Git opaque IDs as well. A native blob ID is typed the same way but identified by its `Source.object` position, never used as a snapshot merely because it has the right length.
+| Retry | Codes |
+|---|---|
+| `after_correction` | `INVALID_REQUEST`, `NOT_FOUND`, `EXACT_SNAPSHOT_REQUIRED`, `INVALID_SOURCE`, `NUMBER_UNREPRESENTABLE`, `LIMIT_EXCEEDED`, `VALIDATION_FAILED` |
+| `after_refresh` | `UNAUTHENTICATED`, `CONFLICT`, `NAMESPACE_DISCONTINUITY`, `TOKEN_INVALID` |
+| `after_backoff` | `RATE_LIMITED`, `PROVIDER_UNAVAILABLE` |
+| `never` | `UNSUPPORTED_VERSION`, `UNSUPPORTED_CAPABILITY`, `FORBIDDEN`, `NOT_FOUND_OR_FORBIDDEN`, `SNAPSHOT_UNAVAILABLE`, `INTEGRITY_MISMATCH`, `NO_CHANGE`, `HISTORY_UNAVAILABLE` |
 
-**G2.** Fully qualified branch refs resolve to commits. Lightweight and nested annotated tags must be peeled with cycle/depth bounds to a commit; a tree/blob endpoint is `INVALID_SOURCE`. Exact snapshot input must identify a commit, not an unpeeled tag. These are object checks, not additional mutable-ref resolutions.
+Stage 0/1 failures use `{protocol:<this draft>,op:"unknown",status:"error",error:...}`: no partially parsed request is treated as an executed publication. Once a request is well formed, read/observe failures use their operation name; publication uses P5, including capability/access failures. An invalid `reconcile` message supplies no outcome evidence about the earlier request: its caller MUST keep that earlier outcome unresolved. No response silently fabricates identity fields from invalid input.
 
-**G3.** Git puts preserve existing regular-file mode; new files use `100644`. No executable-mode changes, symlink/submodule writes or implicit directory replacement are defined. A writable Git binding must separately qualify admission, receipt placement, explicit old-version protection and retention. A non-force ref update alone is not a general CAS contract [N5]. No live writer is qualified by these documents.
+**E3.** Conformance compares complete semantic JSON results: object order/whitespace and the documented opaque token bytes are excluded, but array cardinality/order, keys, values, absence, provenance, typed IDs, publication fields, error codes and retry classes are not. Native object IDs/integrity levels reflect the declared provider evidence, not an implementation preference. The harness supplies deterministic token and proof services to compare exact test results. The shipped 0.1.0 API remains unchanged and uses its separate golden envelope.
 
-**L1.** Keep `stateowl.router/v1` as an optional compatibility resolver. Its route default is `select`; named `links` expand explicitly and nonrecursively. Cross-repository links require exact commits. Do not add a second authoritative router to existing `.state` projects. Native Governance routing requires separately authorized real fixtures before compatibility is claimed.
+## References
 
-**L2.** The 0.1.0 Python/CLI API and its `expected_head` freshness assertion remain unchanged. Legacy golden fixtures record its own response shape and errors. They are not rewritten to the new envelope. New source-number restrictions, typed snapshots and batch reads belong to the new draft, not a silent 0.1.0 behavior change.
-
-## 10. References
-
-[N1] [RFC 2119](https://www.rfc-editor.org/rfc/rfc2119) and [RFC 8174](https://www.rfc-editor.org/rfc/rfc8174): BCP 14 terminology.  
-[N2] [JSON Schema 2020-12](https://json-schema.org/draft/2020-12) and its [validation vocabulary](https://json-schema.org/draft/2020-12/json-schema-validation).  
-[N3] [RFC 8259](https://www.rfc-editor.org/rfc/rfc8259): JSON; [RFC 4648](https://www.rfc-editor.org/rfc/rfc4648): base64.  
-[N4] [RFC 8785](https://www.rfc-editor.org/rfc/rfc8785.html): JSON canonicalization.  
-[N5] [GitHub REST refs](https://docs.github.com/en/rest/git/refs) and [git-update-ref](https://git-scm.com/docs/git-update-ref): provider-specific update semantics.
+[N1] RFC 2119 and RFC 8174 (BCP 14).  
+[N2] JSON Schema 2020-12: https://json-schema.org/draft/2020-12/  
+[N3] RFC 8259 JSON and RFC 4648 base64: https://www.rfc-editor.org/rfc/rfc8259 and https://www.rfc-editor.org/rfc/rfc4648  
+[N4] RFC 8785: https://www.rfc-editor.org/rfc/rfc8785.html ; negative-zero erratum 7920: https://www.rfc-editor.org/errata/rfc8785 . The draft explicitly rejects negative zero. Standards were checked on 3 October 2026; the conformance code uses a test-only ECMAScript oracle for number serialization rather than claiming Python `repr` is JCS.

@@ -1,48 +1,53 @@
-# Protocol and conformance — working draft
+# Protocol and conformance — draft 2
 
-**Draft:** `stateowl/0.2-draft.1`  
-**Stage:** R1 started; not accepted as complete or stable.  
-**Scope:** Specification, declarative fixtures and offline checks. No new runtime, provider, plugin or deployment.
+**Protocol:** `stateowl/0.2-draft.2`  
+**Stage:** R1 correction prepared for independent re-audit; not stable or independently accepted.  
+**Scope:** Specification, fixtures and offline test infrastructure. R2 has not started.
 
-## Contents
+## Contract
 
 | File | Purpose |
 |---|---|
-| [PROTOCOL.md](PROTOCOL.md) | Normative draft for exact/current reads, guarded publication, uncertain outcomes, observation, identity, provenance and legacy compatibility. |
-| [schema.json](schema.json) | Closed JSON Schema 2020-12 message definitions; no remote schema dependencies. |
-| [fixtures.json](fixtures.json) | Shared exact bytes, 36 structural vectors, 11 strict JSON vectors, one receipt-digest vector and scenario file index. |
-| [Read](read-cases.json), [publish](publish-cases.json), [observe](observe-cases.json) cases | 39 concrete behavioral scenarios grouped by operation. |
-| [legacy-v0.1.0.json](legacy-v0.1.0.json) | Six golden cases preserving the existing reader's own output and error shapes. |
-| [check_fixtures.py](check_fixtures.py) | Offline corpus consistency checks and executable legacy-reader checks. |
-| [CHECKS.md](CHECKS.md) | What was executed, its baseline and the limits of the results. |
+| [PROTOCOL.md](PROTOCOL.md) | Provider-neutral identities, focused reads, publication outcomes, observation and deterministic errors. |
+| [git-binding-v1.md](git-binding-v1.md) | Typed Git identities, tag peeling, file modes, atomic receipt representation and bounded reconciliation. |
+| [router-v1.md](router-v1.md) | Self-contained optional `stateowl.router/v1` compatibility binding. |
+| [schema.json](schema.json) | Closed protocol messages and compatibility shapes, JSON Schema 2020-12. |
+| [HARNESS.md](HARNESS.md) | Adapter-facing provider/fault interface and fixture format. |
+| [harness.schema.json](harness.schema.json) | Closed test case/world/fault containers. |
+| [fixtures.json](fixtures.json) | Exact bytes, shared assets, structural/serialization/hash vectors and scenario index. |
+| [Read](read-cases.json), [publish](publish-cases.json), [observe](observe-cases.json) | Fixed expected scenarios executed against finite provider worlds. |
+| [legacy-v0.1.0.json](legacy-v0.1.0.json) | The unchanged six original Reader goldens. |
+| [CHECKS.md](CHECKS.md) | Executed commands, results and evidence limits. |
 
-The [architecture decision](../ARCHITECTURE-DECISION.md), [roadmap](../ROADMAP.md) and [research record](../SOURCES.md) are preserved as the original architecture package. Their historical status text is unchanged. The subsequent instruction to save that package and start the protocol authorizes this draft work; it does not itself establish independent review, a stable protocol or completed roadmap gates.
+## Correction decisions
 
-## Run the checks
+| Finding | Draft-2 decision |
+|---|---|
+| F01 — binding identity | One pinned semantic identifier shared by independent implementations; no implementation-code digest. |
+| F02 — Git generation | Ordinary snapshots contain only typed/scoped immutable identity. No invented incarnation counter; write continuity is an explicit trust boundary. |
+| F03 — receipt discovery | Canonical identity in a commit-message receipt, sole expected parent, complete candidate verification and a bounded linear-history walk. Missing history stays uncertain. |
+| F04 — legacy compatibility | A separately versioned normative binding defines supported router/link behavior without requiring Python knowledge. |
+| F05 — determinism | Exact result cardinality/order, minimal outcome-specific fields, fixed error codes/retry classes and ordered validation stages. |
+| N02 — replay identity | Remove `operation_id`. Hash the normalized unordered change set, target, expected state and validation pin. `reconcile` cannot dispatch. |
+| N03 — retention | `reachable_history` has precise storage semantics, not a free-text or time-based guarantee; lookup is numerically bounded. |
 
-From a repository checkout, in a test environment:
+The archived [architecture](../ARCHITECTURE-DECISION.md), [roadmap](../ROADMAP.md), Charter, product runtime, adapters and package version are unchanged. The correction assignment accepts R0 for this work; historical wording in the archived package remains intact.
+
+## Run
+
+Test prerequisites: Python, `jsonschema`, and Node.js for the **test-only ECMAScript/JCS oracle**. These are not new product/runtime dependencies. Install the existing test requirements in a test environment if needed:
 
 ```sh
 python -m pip install -r docs/protocol/requirements-checks.txt
 python docs/protocol/check_fixtures.py
+python docs/protocol/check_fixtures.py --adapter python docs/protocol/harness_client.py
+PYTHONPATH=src python -m unittest discover -s tests -v
 ```
 
-`jsonschema` is a test-only dependency. The existing stateOwl runtime and package requirements are unchanged. No network is used by the checker; dependency installation is a separate setup step. No GitHub Actions workflow is added.
+The first command installs test dependencies; the checks themselves use no network. `harness.py` is a finite specification model, and `harness_client.py` tests the JSONL interface using that same model in another process. Neither is a production adapter or an independent implementation. `fixture_codec.py` and `ecma_oracle.js` test serialization; they expose no stateOwl service. No GitHub Actions workflow is added.
 
-## Fixture contract
+The corpus contains 90 read, 56 publication and 16 observation scenarios. The checker validates fixed expected outputs and actual simulated traces, including zero-dispatch reconciliation and complete candidate bytes/modes. Six separate tests execute the unchanged legacy Reader. See CHECKS for the exact counts of structural and serialization assertions.
 
-`fixtures.json` embeds exact base64 source bytes and SHA-256 digests. Each scenario has a concrete `request`, expected `response`, named normative `rules`, declarative provider facts in `given`, and optional expected instrumentation in `trace`. Repeated requests deliberately describe different provider outcomes. Origin overrides in a returned source identify separate, explicitly pinned stores; the supplied fixture bytes for those paths are the same in this initial corpus.
+## R1 boundary
 
-The checker validates both messages, source digests, selected values, missing fields, receipt preimages and outcome consistency with the declared facts. Trace entries are expectations for a future instrumented adapter, **not observed provider traces**. Facts such as admission, changed heads, retained history and authority come from `given`; this checker does not establish them against a real provider.
-
-The strict JSON vectors test parsing before projection, including duplicate keys, invalid UTF-8, surrogates, non-finite and unrepresentable numbers. The receipt vector binds exact decoded bytes, expected state, ordered changes and validator identity. It additionally checks UTF-8/base64 equivalence and change-order sensitivity. Canonicalization in the checker is restricted to the draft's fixed-ASCII-key, integer-only receipt envelope; it is not a general RFC 8785 implementation.
-
-`legacy-v0.1.0.json` is separate. Its cases actually invoke the repository's existing `Reader` with an instrumented in-memory store, comparing full golden outputs/errors and read traces. These are legacy regression cases, not evidence that 0.1.0 implements the new draft.
-
-## Remaining R1 work
-
-The draft still needs independent contract review and an implementation-facing provider/fault-harness interface. The current scenarios do not execute new read, publish or observe implementations. Extend the corpus for tag-object graphs, hash-format variants, malformed routing, namespace retention/reset proofs, file-mode preservation and the full error/limit surface before calling it a complete conformance suite.
-
-Native Governance compatibility needs separately authorized real fixtures; none is claimed here. Cross-language agreement, actual concurrent publication, interrupted provider requests, cross-plane continuation and zero-idle-model automation belong to later implementation/qualification gates.
-
-Snapshot generations, numerical restrictions and the receipt envelope are explicit draft design choices derived from the architecture—not features retroactively added to 0.1.0. Review them before stabilizing the wire contract. The source package version remains 0.1.0.
+The listed R1 correction gaps are covered for re-audit. Independent review still decides acceptance. Real GitHub/local-Git write qualification, independent-language agreement, real Governance fixtures, hosted-plane continuity and automation qualification remain later gates. Synthetic graph execution is not evidence of real-provider concurrency, history retention or object-chain integrity.
