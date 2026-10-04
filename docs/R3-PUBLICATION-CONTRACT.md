@@ -225,18 +225,18 @@ Single-step continuity for this local qualification is a trusted test-environmen
 
 | # | Case | Required action and result |
 |---|---|---|
-| 1 | normal A to B | Submit one valid transition at A. Exactly one child B is admitted and freshly verified committed. |
-| 2 | divergent two-writer race | Two different requests share expected A. Exactly one child is admitted; the other returns not_committed/CONFLICT after bounded reconciliation. |
-| 3 | identical two-writer race | Two identical logical requests share expected A. Exactly one child is admitted; both callers resolve to committed with the same admitted snapshot. |
-| 4 | lost successful response | Admit the request, suppress/discard the caller-visible success, retain the exact request, then run reconcile. Reconcile performs zero admissions and resolves the admitted snapshot. |
-| 5 | positive admission then verification failure | Let expected-old admission return a positive admitted snapshot, then inject a verification read failure. Result is verification_pending with that snapshot, never downgraded to indeterminate/not_committed. |
-| 6 | later successor | After a verified publication B, admit a valid successor C. Reconcile the retained B request and return committed snapshot B with observed_head C. |
-| 7 | expected-old conflict | Advance the namespace with a different valid child, then submit a stale divergent request. No new admission; result is not_committed/CONFLICT under intact continuity. |
-| 8 | skipped-head violation | Deliberately perform one qualification-owned A to D ref transition where D is a descendant through intermediate C. Mark/observe that actual skipped transition in the trusted continuity monitor. Reconciliation must return NAMESPACE_DISCONTINUITY, not infer C admission from ancestry. |
-| 9 | complete tree preservation | Change only named records. Verify the admitted tree equals expected overlay exactly and every untouched entry/object/mode is unchanged. |
-| 10 | executable mode preservation | Put new bytes at existing state/script. Verify admitted mode remains 100755. |
-| 11 | new-file mode | Put a new regular file. Verify admitted mode is exactly 100644. |
-| 12 | no worktree mutation | Across the publication cases, verify checked-out HEAD, index tree, and worktree digest set are byte-for-byte unchanged from their pre-case values. |
+| 1 | normal A to B | Submit the normal payload at A. Exactly one child B is admitted and freshly verified committed. |
+| 2 | divergent two-writer race | Submit divergent-P and divergent-T from the same expected A at one barrier. Exactly one child is admitted; the other returns not_committed/CONFLICT after bounded reconciliation. |
+| 3 | identical two-writer race | Submit the identical payload twice from the same expected A at one barrier. Exactly one child is admitted; both callers resolve to committed with the same admitted snapshot. |
+| 4 | lost successful response | Submit the normal payload, let admission succeed, suppress/discard the caller-visible success, retain the exact request, then run reconcile. Reconcile performs zero admissions and resolves the admitted snapshot. |
+| 5 | positive admission then verification failure | Submit the normal payload. After a positive admission return, the qualification fault wrapper makes the first exact-tree verification read fail with PROVIDER_UNAVAILABLE without changing Git. Result is verification_pending with that snapshot, never downgraded to indeterminate/not_committed. |
+| 6 | later successor | Submit normal A to B, then successor B to C. Reconcile the retained B request and return committed snapshot B with observed_head C. |
+| 7 | expected-old conflict | Admit divergent-P from A, then submit divergent-T still expecting A. No new admission; result is not_committed/CONFLICT under intact continuity. |
+| 8 | skipped-head violation | Construct C as a child of A and D as a child of C without admitting C, then deliberately perform one qualification-owned A to D ref transition. Mark/observe that actual skipped transition in the trusted continuity monitor. Reconciliation for the C transition must return NAMESPACE_DISCONTINUITY, not infer C admission from ancestry. |
+| 9 | complete tree preservation | Submit the normal payload and verify the admitted tree equals the exact A overlay and every untouched entry/object/mode is unchanged. |
+| 10 | executable mode preservation | Submit only the executable-mode payload at A. Verify admitted state/script mode remains 100755. |
+| 11 | new-file mode | Submit only the new-file-mode payload at A. Verify admitted state/new.txt mode is exactly 100644. |
+| 12 | no worktree mutation | For every local case, verify checked-out HEAD, index tree, and worktree digest set are byte-for-byte unchanged from their pre-case values. |
 
 ### W4 evidence receipt
 
