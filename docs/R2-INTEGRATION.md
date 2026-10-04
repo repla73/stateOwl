@@ -1,50 +1,76 @@
-# R2 integration
+# R2 integration evidence
 
-- Frozen basis: `05278c225eb302697e8b31406d06f98022ab7d3c`
-- Python subject: `5bc2ab4834bcb17c8dee352737752e887835da4a`
-- TypeScript subject: `d61c17e946e631723e8fd8407e0707e14002864f`
-- Native fixture subject: `60733bc765e029ebfde6102f5f2c265192cf95d9`
-- Integrated candidate: branch `r2/integration`; the exact published commit is recorded in the integration receipt.
+## Frozen subjects
 
-## Qualification
+- Frozen R2 basis: `05278c225eb302697e8b31406d06f98022ab7d3c`
+- Accepted Python subject: `5bc2ab4834bcb17c8dee352737752e887835da4a`
+- Accepted TypeScript subject: `d61c17e946e631723e8fd8407e0707e14002864f`
+- Shared native `.state` fixture subject: `60733bc765e029ebfde6102f5f2c265192cf95d9`
+- W2/W3 execution subject: `3fa403f4a0067174f8d11272d1ea9577427c19bd`
+- Integration branch: `r2/integration`
 
-Python complete R2 suite:
+## W2 — language qualification
 
-```sh
-PYTHONPATH=src python -m unittest discover -s tests -p 'test_r2*.py' -v
-```
+Python executed qualification:
 
-TypeScript complete test and conformance suites:
+- normative reads: `90/90`
+- legacy: `6/6`
+- Git identity/tag: `13/13`
+- non-Git: PASS
+- native `.state`: `8/8`
+- complete R2 tests: `24/24`
+- audit corrections: PASS
+- exact mutable-ref resolutions: `0`
+- current batch mutable-ref resolutions: `1`
+- hidden repository crawl: `no`
 
-```sh
-npm --prefix typescript test
-npm --prefix typescript run conformance
-```
+TypeScript executed qualification:
 
-Cross-language differential over all 90 normative read cases and all 8 shared native-state cases:
+- normative reads: `90/90`
+- legacy: `6/6`
+- Git identity/tag: `20/20`
+- non-Git: PASS
+- native `.state`: `8/8`
+- complete tests: `38/38`
+- strict serialization vectors: PASS
+- audit corrections: PASS
+- exact mutable-ref resolutions: `0`
+- current batch mutable-ref resolutions: `1`
+- hidden repository crawl: `no`
 
-```sh
-npm --prefix typescript run build
-node qualification/r2_differential.mjs
-```
+The repository was unmodified by W2 execution.
 
-Common cross-language benchmark:
+## W3 — differential
 
-```sh
-npm --prefix typescript run build
-PYTHONPATH=src python benchmarks/r2_common_benchmark.py --output benchmarks/results/r2-common-interoperability.json
-```
+At execution subject `3fa403f4a0067174f8d11272d1ea9577427c19bd`:
 
-The differential runner is qualification-only and invokes the real Python and built TypeScript readers. It compares protocol-visible outputs without reimplementing reader semantics.
+- normative equivalence: `90/90`
+- native-state equivalence: `8/8`
+- mismatches: none
 
-The common benchmark harness is `benchmarks/r2_common_benchmark.py` with the TypeScript runner `typescript/benchmarks/r2-common-runner.ts`. It covers exact focused read, current focused read, current five-record batch, the direct pinned and compact batch baselines, and fixed-router and growing-router scales `0,10,100,1000`.
+The differential was not rerun after qualification-only changes. Its evidence remains valid because no Python runtime source, TypeScript runtime source, shared fixture, protocol corpus, or `qualification/r2_differential.mjs` changed after the execution subject. Post-execution changes are limited to common-benchmark qualification/evidence files and this integration evidence document.
 
-For this qualification benchmark only, `record_bytes` and `response_bytes` are raised to `1048576`; production/default capabilities and protocol limits are unchanged. The benchmark fails unless all stateOwl reads succeed, fixed-router and growing-router scaling invariants hold, and Python/TypeScript measurements agree.
+## Corrected common benchmark
 
-The committed benchmark result file initially records the previous independent common-benchmark evidence and identifies whether an integrated rerun has replaced it.
+Artifact: `benchmarks/results/r2-common-interoperability.json`
 
-Evidence is deterministic/local unless explicitly stated otherwise. It does not claim live GitHub performance.
+- SHA-256: `6657bf3945ab3bde7c096408e021336e7f01e7e8cc7addd82cd3b71cbaacef70`
+- qualification pass: `true`
+- successful focused reads: PASS
+- fixed-router scaling: PASS
+- growing-router selected context remains constant: PASS
+- cross-language comparable: PASS
+- benchmark `record_bytes`: `1048576`
+- benchmark `response_bytes`: `1048576`
 
-R2 remains read-only. No state publication API, ref mutation, scheduler, claims/leases, MCP/plugin infrastructure, or Governance semantics are introduced in core.
+For both implementations, exact/current/batch-5 selected-context model bytes are `565` / `565` / `1787`. Fixed-router scales `0,10,100,1000` remain constant at `851` model-visible bytes with `1` mutable-ref resolution, `5` provider operations, `2` file reads, and `160` provider-returned bytes. Growing-router scales keep the same selected context and operation counts while provider-returned bytes grow `160`, `670`, `5440`, `54940`.
 
-R3 has not started. R2 is not merged or complete until independent final integration audit passes.
+Evidence boundary: `deterministic in-memory qualification; not live GitHub performance`.
+
+## Integrity and status
+
+Accepted Python runtime source, accepted TypeScript runtime source, and the shared native fixture remain byte-identical to their accepted subjects. No new Python runtime dependency or TypeScript runtime package dependency was introduced.
+
+R2 remains read-only. No publication/write implementation, Git ref mutation/push support, scheduler, claims/leases, plugin/MCP infrastructure, or Governance semantics are present in stateOwl core.
+
+R3 has not started. R2 is not merged or released. Final independent R2 integration audit is still required before adoption.
