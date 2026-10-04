@@ -1,0 +1,15 @@
+{
+  "schema": "project.task-state/v1",
+  "task": "p01t001",
+  "status": "working",
+  "round": 2,
+  "review": {
+    "r01": "PASS"
+  },
+  "approval": "project-owned",
+  "governance_binding": "urn:example:project-policy:7",
+  "effects": {
+    "publish": "pending"
+  },
+  "unrelated": "must not appear in projected reads"
+}
