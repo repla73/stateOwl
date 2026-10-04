@@ -20,5 +20,8 @@ export function validateGitTarget(t:Target):void {
   if(t.authority==="github.com") {
     if(!/^[a-z0-9_.-]+\/[a-z0-9_.-]+$/.test(t.resource) || t.resource.endsWith(".git")) throw new ProtocolError("INVALID_REQUEST");
   }
-  if(!/^refs\/(heads|tags)\//.test(t.namespace) || /\.\.|\/\.|\.\/|\/\/|[~^:?*\[\\\x00-\x20\x7f]/.test(t.namespace) || t.namespace.endsWith("/") || t.namespace.endsWith(".")) throw new ProtocolError("INVALID_REQUEST");
+  const ref=t.namespace;
+  const parts=ref.split("/");
+  const invalid=!/^refs\/(heads|tags)\//.test(ref)||parts.some(p=>p.length===0||p.startsWith(".")||p.endsWith(".lock"))||ref.includes("..")||ref.includes("@{")||/[~^:?*\[\\\x00-\x20\x7f]/.test(ref)||ref.endsWith("/")||ref.endsWith(".");
+  if(invalid) throw new ProtocolError("INVALID_REQUEST");
 }

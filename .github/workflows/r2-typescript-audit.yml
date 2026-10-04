@@ -1,0 +1,21 @@
+name: R2 TypeScript audit qualification
+on:
+  push:
+    branches: [r2/typescript-reader]
+permissions:
+  contents: read
+jobs:
+  qualify:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: typescript
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.16.0'
+      - run: npm install --no-save typescript@5.8.3
+      - run: npm test
+      - run: npm run conformance
+      - run: npm run benchmark
