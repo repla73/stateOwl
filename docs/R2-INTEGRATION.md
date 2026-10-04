@@ -67,10 +67,19 @@ For both implementations, exact/current/batch-5 selected-context model bytes are
 
 Evidence boundary: `deterministic in-memory qualification; not live GitHub performance`.
 
+## Final audit and adoption
+
+- Final integration audit: `R2_FINAL: PASS`
+- Accepted integration subject: `f46bd672704ad0978578845e00f943605f087a74`
+- Accepted tree: `6306981baa653ad5f38270d743333a6e4694c2f1`
+- Clean adoption commit on `main`: `7e312068264513a0e66bdd1f0c728c7d5e79667c`
+- R2 status: adopted
+- R3 status: not started
+
 ## Integrity and status
 
 Accepted Python runtime source, accepted TypeScript runtime source, and the shared native fixture remain byte-identical to their accepted subjects. No new Python runtime dependency or TypeScript runtime package dependency was introduced.
 
 R2 remains read-only. No publication/write implementation, Git ref mutation/push support, scheduler, claims/leases, plugin/MCP infrastructure, or Governance semantics are present in stateOwl core.
 
-R3 has not started. R2 is not merged or released. Final independent R2 integration audit is still required before adoption.
+R2 is adopted on `main`. R3 has not started.
