@@ -59,7 +59,7 @@ class ProviderFailure(Fault):
 
 class Provider:
     """Scripted provider boundary shared by the model and future adapter drivers."""
-    METHODS={'access','resolve','inspect','file','tree','validate','admit','token_check','token_issue'}
+    METHODS={'access','authorize','resolve','inspect','file','tree','validate','admit','token_check','token_issue'}
     def __init__(self,world):
         self.world=copy.deepcopy(world);self.initial=copy.deepcopy(world);self.calls=[];self.counts=Counter()
         self.dispatches=0;self.admissions=0;self.tokens=copy.deepcopy(world.get('tokens',{}))
@@ -108,7 +108,7 @@ class Provider:
         if not store or store.get('target')!=target: raise Fault('FORBIDDEN')
         return store
     def call(self,method,**args):
-        signatures={'access':{'target','operation'},'resolve':{'target'},'inspect':{'target','snapshot'},'file':{'target','snapshot','path'},'tree':{'target','snapshot'},'validate':{'target','expected','binding','old','candidate'},'admit':{'target','expected','candidate','message'},'token_check':{'token','scope'},'token_issue':{'scope','fingerprint'}}
+        signatures={'access':{'target','operation'},'authorize':{'target','operation','paths'},'resolve':{'target'},'inspect':{'target','snapshot'},'file':{'target','snapshot','path'},'tree':{'target','snapshot'},'validate':{'target','expected','binding','old','candidate'},'admit':{'target','expected','candidate','message'},'token_check':{'token','scope'},'token_issue':{'scope','fingerprint'}}
         if method not in signatures or set(args)!=signatures[method]: raise ValueError('invalid provider call signature')
         self.counts[method]+=1;self.calls.append({'method':method,'args':copy.deepcopy(args)})
         faults=[(i,f) for i,f in enumerate(self.world.get('faults',[])) if f['method']==method and f.get('at',1)==self.counts[method]]
@@ -142,6 +142,11 @@ class Provider:
             result={k:copy.deepcopy(s.get(k,v)) for k,v in {'validation':None,'validator_available':True,'project_authorized':True,'continuity':'intact','auth_scope':'fixture-user'}.items()}
             if a['operation']=='publish': result['continuity']=self.publication_continuity(s)
             return result
+        if method=='authorize':
+            if a['operation']!='publish':raise ValueError('path authorization is publication-only in this harness')
+            denied=set(s.get('forbidden_paths',[]))
+            if any(path in denied for path in a['paths']):raise Fault('FORBIDDEN')
+            return True
         if method=='resolve':
             h=s.get('head')
             if h is None:raise Fault('NOT_FOUND')
@@ -395,6 +400,8 @@ class Model:
     def publish(self,r):
         t=r['target'];a=self.access
         if t['kind']=='git' and not t['namespace'].startswith('refs/heads/'):raise Fault('UNSUPPORTED_CAPABILITY')
+        paths=sorted((change['path'] for change in r['changes']),key=lambda path:path.encode('utf-8'))
+        self.p.call('authorize',target=t,operation='publish',paths=paths)
         if a['continuity']!='intact':raise Fault('NAMESPACE_DISCONTINUITY')
         if r['mode']=='reconcile':return self.reconcile(r)
         self.root(t,{'snapshot':r['expected']})
