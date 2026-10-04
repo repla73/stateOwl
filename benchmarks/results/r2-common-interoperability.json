@@ -1,0 +1,78 @@
+{
+  "schema": "stateowl.r2-common-interoperability-prior-audit/v1",
+  "basis": "05278c225eb302697e8b31406d06f98022ab7d3c",
+  "provenance": "independent R2 interoperability audit supplied to integration task",
+  "integration_rerun": "not executed by this publication session",
+  "prior_audit": {
+    "python": {
+      "exact": {
+        "model_visible_bytes": 588,
+        "mutable_ref_resolutions": 0,
+        "provider_operations": 3,
+        "file_reads": 1
+      },
+      "current": {
+        "model_visible_bytes": 588,
+        "mutable_ref_resolutions": 1,
+        "provider_operations": 4,
+        "file_reads": 1
+      },
+      "batch5": {
+        "model_visible_bytes": 1797,
+        "mutable_ref_resolutions": 1,
+        "provider_operations": 4,
+        "file_reads": 1
+      }
+    },
+    "typescript": {
+      "exact": {
+        "model_visible_bytes": 588,
+        "mutable_ref_resolutions": 0,
+        "provider_operations": 3,
+        "file_reads": 1
+      },
+      "current": {
+        "model_visible_bytes": 588,
+        "mutable_ref_resolutions": 1,
+        "provider_operations": 4,
+        "file_reads": 1
+      },
+      "batch5": {
+        "model_visible_bytes": 1797,
+        "mutable_ref_resolutions": 1,
+        "provider_operations": 4,
+        "file_reads": 1
+      }
+    },
+    "fixed_router": {
+      "scales": [
+        0,
+        10,
+        100,
+        1000
+      ],
+      "selected_output_bytes": [
+        857,
+        857,
+        857,
+        857
+      ]
+    },
+    "growing_router": {
+      "scales": [
+        0,
+        10,
+        100,
+        1000
+      ],
+      "selected_output_bytes": [
+        857,
+        857,
+        857,
+        857
+      ],
+      "provider_bytes": "increase with router size"
+    }
+  },
+  "note": "These numbers are provenance, not assertions in the integration harness. Run benchmarks/r2_common_benchmark.py to produce fresh integrated results."
+}
