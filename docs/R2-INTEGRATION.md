@@ -39,6 +39,8 @@ The differential runner is qualification-only and invokes the real Python and bu
 
 The common benchmark harness is `benchmarks/r2_common_benchmark.py` with the TypeScript runner `typescript/benchmarks/r2-common-runner.ts`. It covers exact focused read, current focused read, current five-record batch, the direct pinned and compact batch baselines, and fixed-router and growing-router scales `0,10,100,1000`.
 
+For this qualification benchmark only, `record_bytes` and `response_bytes` are raised to `1048576`; production/default capabilities and protocol limits are unchanged. The benchmark fails unless all stateOwl reads succeed, fixed-router and growing-router scaling invariants hold, and Python/TypeScript measurements agree.
+
 The committed benchmark result file initially records the previous independent common-benchmark evidence and identifies whether an integrated rerun has replaced it.
 
 Evidence is deterministic/local unless explicitly stated otherwise. It does not claim live GitHub performance.
