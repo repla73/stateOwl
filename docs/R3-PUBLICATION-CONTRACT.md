@@ -182,13 +182,31 @@ W1 defines this matrix but does not execute it.
 
 Create a disposable local Git repository owned by the qualification run. Keep an unrelated checked-out branch named worktree-sentinel. Create the publication namespace refs/heads/stateowl-r3-qualification at base commit A without checking it out.
 
-A contains the same essential file shapes used by the protocol fixture:
+The local target is fixed by trusted test configuration as:
 
-- state/work.json regular 100644;
-- state/obsolete.txt regular 100644;
-- state/script regular executable 100755;
-- state/untouched.txt regular 100644;
-- any required validation fixture record as regular 100644.
+    {"kind":"git","authority":"qualification.local","resource":"stateowl/r3","namespace":"refs/heads/stateowl-r3-qualification"}
+
+The A tree is fixed to these exact bytes and modes:
+
+| Path | Canonical base64 bytes | Mode |
+|---|---|---|
+| state/work.json | eyJ2IjoiQSJ9Cg== | 100644 |
+| state/obsolete.txt | b2xkCg== | 100644 |
+| state/script | IyEvYmluL3NoCmV4aXQgMAo= | 100755 |
+| state/untouched.txt | a2VlcAo= | 100644 |
+| state/validation.json | eyJlbmFibGVkIjp0cnVlfQo= | 100644 |
+
+The qualification transitions use these exact mutation payloads:
+
+- normal: put state/work.json = eyJ2IjoiQiJ9Cg== and delete state/obsolete.txt;
+- divergent-P: put state/race.txt = cHl0aG9uCg==;
+- divergent-T: put state/race.txt = dHlwZXNjcmlwdAo=;
+- identical: put state/shared.txt = c2FtZQo=;
+- successor: put state/successor.txt = bGF0ZXIK;
+- executable-mode case: put state/script = IyEvYmluL3NoCmVjaG8gcjMK;
+- new-file-mode case: put state/new.txt = the empty byte string.
+
+These are request bytes, not precomputed Git object IDs. Each implementation computes its protocol identity and actual Git commit ID and returns them as evidence.
 
 Record before every case:
 
@@ -247,21 +265,23 @@ W1 defines this plan but performs no live writes.
 The execution worker is given, not asked to provision:
 
 - one pre-existing disposable GitHub repository;
-- one dedicated publication namespace already initialized at A;
+- one dedicated publication namespace already initialized at A with the exact A file bytes/modes from the W4 common fixture;
+- the exact protocol Target using authority github.com, the lowercase owner/repository resource, and that fully qualified refs/heads/... namespace;
+- the exact typed Git snapshot ID for A and a complete baseline tree/object/mode observation;
 - one narrow credential scoped to that disposable repository and namespace use;
-- trusted project-validation configuration;
+- the trusted validation binding and validator configuration for the fixture;
 - an explicit test-environment statement/configuration establishing the single-step policy assumption for the qualification interval.
 
-No app, repository, credential, branch, or namespace is created by W1 or by an implementation worker.
+The worker records these inputs before the first write. No app, repository, credential, branch, or namespace is created by W1 or by an implementation worker.
 
 ### Maximum accepted transitions
 
 The sequence permits at most four accepted namespace transitions. Rejected CAS attempts do not count.
 
-1. **Transition 1 — Python A to B.** Python submits and verifies a normal publication.
-2. **Transition 2 — TypeScript B to C with discarded response.** TypeScript submits. The qualification driver deliberately discards the successful caller-visible result while retaining the exact request, then invokes reconcile with mode reconcile. Reconciliation must perform no admission and establish C.
-3. **Transition 3 — divergent cross-language race from C.** Python and TypeScript start from C with different transitions. Exactly one child D is admitted; the loser is excluded as conflict under intact continuity.
-4. **Transition 4 — identical cross-language race from D.** Python and TypeScript submit the exact same logical transition from D. Exactly one E is admitted. Both implementations must resolve the same E, one directly and the other through conflict reconciliation.
+1. **Transition 1 — Python A to B.** Submit one request with four changes: put state/work.json = eyJ2IjoiQiJ9Cg==; put state/script = IyEvYmluL3NoCmVjaG8gcHl0aG9uCg==; put new state/python-new.txt = cHl0aG9uCg==; delete state/obsolete.txt. Verify B committed, state/script stayed 100755, python-new.txt is 100644, and every untouched entry was preserved.
+2. **Transition 2 — TypeScript B to C with discarded response.** Submit put state/lost.txt = dHlwZXNjcmlwdAo=. The qualification driver deliberately discards the successful caller-visible result while retaining the exact request, then invokes the identical transition with mode reconcile. Reconciliation must perform no admission and establish C.
+3. **Transition 3 — divergent cross-language race from C.** At one start barrier, Python submits put state/race.txt = cHl0aG9uCg== and TypeScript submits put state/race.txt = dHlwZXNjcmlwdAo=, both with expected C and the same validation pin. Exactly one child D is admitted; the loser is excluded as conflict under intact continuity.
+4. **Transition 4 — identical cross-language race from D.** At one start barrier, both languages submit put state/shared.txt = c2FtZQo= with expected D and the same validation pin. Exactly one E is admitted. Both implementations must resolve the same E, one directly and the other through conflict reconciliation.
 5. **Later-successor verification without a fifth transition.** Reconcile the retained winning request from step 3 after E exists. E is now a later successor of D; the result must identify D as the committed snapshot and E as observed_head.
 
 ### Live observations required
