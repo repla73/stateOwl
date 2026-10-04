@@ -1,78 +1,307 @@
 {
-  "schema": "stateowl.r2-common-interoperability-prior-audit/v1",
   "basis": "05278c225eb302697e8b31406d06f98022ab7d3c",
-  "provenance": "independent R2 interoperability audit supplied to integration task",
-  "integration_rerun": "not executed by this publication session",
-  "prior_audit": {
-    "python": {
-      "exact": {
-        "model_visible_bytes": 588,
-        "mutable_ref_resolutions": 0,
-        "provider_operations": 3,
-        "file_reads": 1
-      },
-      "current": {
-        "model_visible_bytes": 588,
-        "mutable_ref_resolutions": 1,
-        "provider_operations": 4,
-        "file_reads": 1
-      },
-      "batch5": {
-        "model_visible_bytes": 1797,
-        "mutable_ref_resolutions": 1,
-        "provider_operations": 4,
-        "file_reads": 1
-      }
-    },
-    "typescript": {
-      "exact": {
-        "model_visible_bytes": 588,
-        "mutable_ref_resolutions": 0,
-        "provider_operations": 3,
-        "file_reads": 1
-      },
-      "current": {
-        "model_visible_bytes": 588,
-        "mutable_ref_resolutions": 1,
-        "provider_operations": 4,
-        "file_reads": 1
-      },
-      "batch5": {
-        "model_visible_bytes": 1797,
-        "mutable_ref_resolutions": 1,
-        "provider_operations": 4,
-        "file_reads": 1
-      }
-    },
-    "fixed_router": {
-      "scales": [
-        0,
-        10,
-        100,
-        1000
-      ],
-      "selected_output_bytes": [
-        857,
-        857,
-        857,
-        857
-      ]
-    },
-    "growing_router": {
-      "scales": [
-        0,
-        10,
-        100,
-        1000
-      ],
-      "selected_output_bytes": [
-        857,
-        857,
-        857,
-        857
-      ],
-      "provider_bytes": "increase with router size"
-    }
+  "benchmark_limits": {
+    "record_bytes": 1048576,
+    "response_bytes": 1048576
   },
-  "note": "These numbers are provenance, not assertions in the integration harness. Run benchmarks/r2_common_benchmark.py to produce fresh integrated results."
+  "cross_language_comparable": true,
+  "evidence_type": "deterministic in-memory qualification; not live GitHub performance",
+  "fixed_router_invariant": true,
+  "growing_router_invariant": true,
+  "mismatches": [],
+  "python": [
+    {
+      "case": "exact",
+      "file_reads": 1,
+      "model_visible_bytes": 565,
+      "mutable_ref_resolutions": 0,
+      "provider_operations": 3,
+      "provider_returned_bytes": 58,
+      "read_success": true,
+      "stateowl_read": true
+    },
+    {
+      "case": "current",
+      "file_reads": 1,
+      "model_visible_bytes": 565,
+      "mutable_ref_resolutions": 1,
+      "provider_operations": 4,
+      "provider_returned_bytes": 58,
+      "read_success": true,
+      "stateowl_read": true
+    },
+    {
+      "case": "batch5",
+      "file_reads": 1,
+      "model_visible_bytes": 1787,
+      "mutable_ref_resolutions": 1,
+      "provider_operations": 4,
+      "provider_returned_bytes": 58,
+      "read_success": true,
+      "stateowl_read": true
+    },
+    {
+      "case": "direct_pinned_file_baseline",
+      "file_reads": 1,
+      "model_visible_bytes": 20,
+      "mutable_ref_resolutions": 0,
+      "provider_operations": 2,
+      "provider_returned_bytes": 58,
+      "stateowl_read": false
+    },
+    {
+      "case": "compact_batch_baseline",
+      "file_reads": 1,
+      "model_visible_bytes": 88,
+      "mutable_ref_resolutions": 0,
+      "provider_operations": 2,
+      "provider_returned_bytes": 58,
+      "stateowl_read": false
+    },
+    {
+      "case": "fixed_router_0",
+      "file_reads": 2,
+      "model_visible_bytes": 851,
+      "mutable_ref_resolutions": 1,
+      "provider_operations": 5,
+      "provider_returned_bytes": 160,
+      "read_success": true,
+      "scale": 0,
+      "stateowl_read": true
+    },
+    {
+      "case": "fixed_router_10",
+      "file_reads": 2,
+      "model_visible_bytes": 851,
+      "mutable_ref_resolutions": 1,
+      "provider_operations": 5,
+      "provider_returned_bytes": 160,
+      "read_success": true,
+      "scale": 10,
+      "stateowl_read": true
+    },
+    {
+      "case": "fixed_router_100",
+      "file_reads": 2,
+      "model_visible_bytes": 851,
+      "mutable_ref_resolutions": 1,
+      "provider_operations": 5,
+      "provider_returned_bytes": 160,
+      "read_success": true,
+      "scale": 100,
+      "stateowl_read": true
+    },
+    {
+      "case": "fixed_router_1000",
+      "file_reads": 2,
+      "model_visible_bytes": 851,
+      "mutable_ref_resolutions": 1,
+      "provider_operations": 5,
+      "provider_returned_bytes": 160,
+      "read_success": true,
+      "scale": 1000,
+      "stateowl_read": true
+    },
+    {
+      "case": "growing_router_0",
+      "file_reads": 2,
+      "model_visible_bytes": 851,
+      "mutable_ref_resolutions": 1,
+      "provider_operations": 5,
+      "provider_returned_bytes": 160,
+      "read_success": true,
+      "scale": 0,
+      "stateowl_read": true
+    },
+    {
+      "case": "growing_router_10",
+      "file_reads": 2,
+      "model_visible_bytes": 851,
+      "mutable_ref_resolutions": 1,
+      "provider_operations": 5,
+      "provider_returned_bytes": 670,
+      "read_success": true,
+      "scale": 10,
+      "stateowl_read": true
+    },
+    {
+      "case": "growing_router_100",
+      "file_reads": 2,
+      "model_visible_bytes": 851,
+      "mutable_ref_resolutions": 1,
+      "provider_operations": 5,
+      "provider_returned_bytes": 5440,
+      "read_success": true,
+      "scale": 100,
+      "stateowl_read": true
+    },
+    {
+      "case": "growing_router_1000",
+      "file_reads": 2,
+      "model_visible_bytes": 851,
+      "mutable_ref_resolutions": 1,
+      "provider_operations": 5,
+      "provider_returned_bytes": 54940,
+      "read_success": true,
+      "scale": 1000,
+      "stateowl_read": true
+    }
+  ],
+  "python_checks": {
+    "fixed_router_invariant": true,
+    "growing_router_invariant": true,
+    "successful_focused_reads": true
+  },
+  "qualification_pass": true,
+  "scales": [
+    0,
+    10,
+    100,
+    1000
+  ],
+  "schema": "stateowl.r2-common-interoperability/v1",
+  "successful_focused_reads": true,
+  "typescript": [
+    {
+      "case": "exact",
+      "file_reads": 1,
+      "model_visible_bytes": 565,
+      "mutable_ref_resolutions": 0,
+      "provider_operations": 3,
+      "provider_returned_bytes": 58,
+      "read_success": true,
+      "stateowl_read": true
+    },
+    {
+      "case": "current",
+      "file_reads": 1,
+      "model_visible_bytes": 565,
+      "mutable_ref_resolutions": 1,
+      "provider_operations": 4,
+      "provider_returned_bytes": 58,
+      "read_success": true,
+      "stateowl_read": true
+    },
+    {
+      "case": "batch5",
+      "file_reads": 1,
+      "model_visible_bytes": 1787,
+      "mutable_ref_resolutions": 1,
+      "provider_operations": 4,
+      "provider_returned_bytes": 58,
+      "read_success": true,
+      "stateowl_read": true
+    },
+    {
+      "case": "direct_pinned_file_baseline",
+      "file_reads": 1,
+      "model_visible_bytes": 20,
+      "mutable_ref_resolutions": 0,
+      "provider_operations": 2,
+      "provider_returned_bytes": 58,
+      "stateowl_read": false
+    },
+    {
+      "case": "compact_batch_baseline",
+      "file_reads": 1,
+      "model_visible_bytes": 88,
+      "mutable_ref_resolutions": 0,
+      "provider_operations": 2,
+      "provider_returned_bytes": 58,
+      "stateowl_read": false
+    },
+    {
+      "case": "fixed_router_0",
+      "file_reads": 2,
+      "model_visible_bytes": 851,
+      "mutable_ref_resolutions": 1,
+      "provider_operations": 5,
+      "provider_returned_bytes": 160,
+      "read_success": true,
+      "scale": 0,
+      "stateowl_read": true
+    },
+    {
+      "case": "fixed_router_10",
+      "file_reads": 2,
+      "model_visible_bytes": 851,
+      "mutable_ref_resolutions": 1,
+      "provider_operations": 5,
+      "provider_returned_bytes": 160,
+      "read_success": true,
+      "scale": 10,
+      "stateowl_read": true
+    },
+    {
+      "case": "fixed_router_100",
+      "file_reads": 2,
+      "model_visible_bytes": 851,
+      "mutable_ref_resolutions": 1,
+      "provider_operations": 5,
+      "provider_returned_bytes": 160,
+      "read_success": true,
+      "scale": 100,
+      "stateowl_read": true
+    },
+    {
+      "case": "fixed_router_1000",
+      "file_reads": 2,
+      "model_visible_bytes": 851,
+      "mutable_ref_resolutions": 1,
+      "provider_operations": 5,
+      "provider_returned_bytes": 160,
+      "read_success": true,
+      "scale": 1000,
+      "stateowl_read": true
+    },
+    {
+      "case": "growing_router_0",
+      "file_reads": 2,
+      "model_visible_bytes": 851,
+      "mutable_ref_resolutions": 1,
+      "provider_operations": 5,
+      "provider_returned_bytes": 160,
+      "read_success": true,
+      "scale": 0,
+      "stateowl_read": true
+    },
+    {
+      "case": "growing_router_10",
+      "file_reads": 2,
+      "model_visible_bytes": 851,
+      "mutable_ref_resolutions": 1,
+      "provider_operations": 5,
+      "provider_returned_bytes": 670,
+      "read_success": true,
+      "scale": 10,
+      "stateowl_read": true
+    },
+    {
+      "case": "growing_router_100",
+      "file_reads": 2,
+      "model_visible_bytes": 851,
+      "mutable_ref_resolutions": 1,
+      "provider_operations": 5,
+      "provider_returned_bytes": 5440,
+      "read_success": true,
+      "scale": 100,
+      "stateowl_read": true
+    },
+    {
+      "case": "growing_router_1000",
+      "file_reads": 2,
+      "model_visible_bytes": 851,
+      "mutable_ref_resolutions": 1,
+      "provider_operations": 5,
+      "provider_returned_bytes": 54940,
+      "read_success": true,
+      "scale": 1000,
+      "stateowl_read": true
+    }
+  ],
+  "typescript_checks": {
+    "fixed_router_invariant": true,
+    "growing_router_invariant": true,
+    "successful_focused_reads": true
+  }
 }
