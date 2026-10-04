@@ -16,7 +16,7 @@ Every case starts with a fresh world and fresh adapter state. Snapshot IDs are r
 
 A file is `{base64,mode}`. A commit has `type:"commit"`, ordered `parents`, raw `message` and a complete finite `files` map. A tag has `type:"tag"`, `target` and optionally `target_type` to test advertised-type verification. Malformed object fields are allowed as injected negative facts; they must fail in the protocol model rather than be repaired by the provider. Other object types test non-commit targets.
 
-World fields model target/namespace, availability, canonical object format, trusted access/validation, retained objects, token state and a finite fault script. Defaults are listed in `harness.py`; `harness.schema.json` closes the world/case containers. `next_due` and `executor_time` are explicitly inert executor facts: they cannot make `observe` invoke a model or publish.
+World fields model target/namespace, availability, canonical object format, trusted access/validation, retained objects, token state and a finite fault script. `forbidden_paths`, when present, is trusted fixture configuration for the publication-path authorization hook; it is not repository data or a protocol field. Defaults are listed in `harness.py`; `harness.schema.json` closes the world/case containers. `next_due` and `executor_time` are explicitly inert executor facts: they cannot make `observe` invoke a model or publish.
 
 ### Ref transitions are not object ancestry
 
@@ -35,6 +35,7 @@ Each method has exactly these arguments; extra/missing arguments fail the harnes
 | Method | Arguments | Value |
 |---|---|---|
 | `access` | `target`, `operation` | Trusted `{validation,validator_available,project_authorized,continuity,auth_scope}`, or an authentication/access fault. `validation` is a semantic ID or null; continuity is `intact`, `unknown` or `reset`, with publication continuity constrained by the single-step policy and actual ref transitions described above. |
+| `authorize` | `target`, `operation`, `paths` | Fixture-only trusted publication-path authorization: `true` or `FORBIDDEN`. For publish, `paths` is the complete distinct change-path set in P2 UTF-8 sort order. It runs before expected-state/source reads. It does not install policy from repository data. |
 | `resolve` | `target` | Current ref's exact object ID, or `NOT_FOUND`. Optional `head_after_resolve` advances the head **after** capturing the returned ID. |
 | `inspect` | `target`, `snapshot` | `{id,type,...}` metadata excluding file bodies; commit parents/message or tag target/type. Missing objects report `SNAPSHOT_UNAVAILABLE`. |
 | `file` | `target`, `snapshot`, `path` | Exact `{base64,mode,digest,integrity,object?}`. Native blob identity is computed from the returned bytes unless a fault replaces the response. Authorized absence is `NOT_FOUND`; concealed denial is `NOT_FOUND_OR_FORBIDDEN`. |
