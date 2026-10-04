@@ -8,15 +8,38 @@
 
 ## Qualification
 
+Python complete R2 suite:
+
 ```sh
-PYTHONPATH=src python -m unittest discover -s tests -v
+PYTHONPATH=src python -m unittest discover -s tests -p 'test_r2*.py' -v
+```
+
+TypeScript complete test and conformance suites:
+
+```sh
 npm --prefix typescript test
 npm --prefix typescript run conformance
+```
+
+Cross-language differential over all 90 normative read cases and all 8 shared native-state cases:
+
+```sh
+npm --prefix typescript run build
+node qualification/r2_differential.mjs
+```
+
+Common cross-language benchmark:
+
+```sh
 npm --prefix typescript run build
 PYTHONPATH=src python benchmarks/r2_common_benchmark.py --output benchmarks/results/r2-common-interoperability.json
 ```
 
-The common benchmark harness is `benchmarks/r2_common_benchmark.py` with the TypeScript runner `typescript/benchmarks/r2-common-runner.ts`. The committed result file initially records the previous independent common-benchmark evidence and identifies whether an integrated rerun has replaced it.
+The differential runner is qualification-only and invokes the real Python and built TypeScript readers. It compares protocol-visible outputs without reimplementing reader semantics.
+
+The common benchmark harness is `benchmarks/r2_common_benchmark.py` with the TypeScript runner `typescript/benchmarks/r2-common-runner.ts`. It covers exact focused read, current focused read, current five-record batch, the direct pinned and compact batch baselines, and fixed-router and growing-router scales `0,10,100,1000`.
+
+The committed benchmark result file initially records the previous independent common-benchmark evidence and identifies whether an integrated rerun has replaced it.
 
 Evidence is deterministic/local unless explicitly stated otherwise. It does not claim live GitHub performance.
 
