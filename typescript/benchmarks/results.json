@@ -1,0 +1,191 @@
+{
+  "basis": "05278c225eb302697e8b31406d06f98022ab7d3c",
+  "protocol": "stateowl/0.2-draft.3",
+  "evidence_type": "mixed",
+  "environment": {
+    "node": "v22.16.0",
+    "platform": "linux",
+    "arch": "x64",
+    "token_metric": "serialized semantic response UTF-8 bytes / 4; approximation, not a model tokenizer"
+  },
+  "cold_start_ms": 50.595,
+  "paths": [
+    {
+      "label": "exact_read",
+      "mean_ms": 0.1357,
+      "provider_calls_total": 3,
+      "provider_calls": {
+        "access": 1,
+        "resolve": 0,
+        "inspect": 1,
+        "file": 1
+      },
+      "model_visible_bytes": 563,
+      "token_approximation_4bytes": 140.75
+    },
+    {
+      "label": "current_read",
+      "mean_ms": 0.0983,
+      "provider_calls_total": 4,
+      "provider_calls": {
+        "access": 1,
+        "resolve": 1,
+        "inspect": 1,
+        "file": 1
+      },
+      "model_visible_bytes": 563,
+      "token_approximation_4bytes": 140.75
+    },
+    {
+      "label": "batch_5_same_file",
+      "mean_ms": 0.1354,
+      "provider_calls_total": 4,
+      "provider_calls": {
+        "access": 1,
+        "resolve": 1,
+        "inspect": 1,
+        "file": 1
+      },
+      "model_visible_bytes": 1787,
+      "token_approximation_4bytes": 446.75
+    },
+    {
+      "label": "direct_pinned_file_baseline",
+      "mean_ms": 0.0353,
+      "provider_calls_total": 1,
+      "model_visible_bytes": 20,
+      "token_approximation_4bytes": 5
+    },
+    {
+      "label": "compact_batch_baseline_5",
+      "mean_ms": 0.0532,
+      "provider_calls_total": 1,
+      "model_visible_bytes": 88,
+      "token_approximation_4bytes": 22
+    }
+  ],
+  "unrelated_state_scaling": [
+    {
+      "unrelated_records": 0,
+      "label": "exact_unrelated_0",
+      "mean_ms": 0.0611,
+      "provider_calls_total": 3,
+      "provider_calls": {
+        "access": 1,
+        "resolve": 0,
+        "inspect": 1,
+        "file": 1
+      },
+      "model_visible_bytes": 563,
+      "token_approximation_4bytes": 140.75
+    },
+    {
+      "unrelated_records": 100,
+      "label": "exact_unrelated_100",
+      "mean_ms": 0.1279,
+      "provider_calls_total": 3,
+      "provider_calls": {
+        "access": 1,
+        "resolve": 0,
+        "inspect": 1,
+        "file": 1
+      },
+      "model_visible_bytes": 563,
+      "token_approximation_4bytes": 140.75
+    },
+    {
+      "unrelated_records": 10000,
+      "label": "exact_unrelated_10000",
+      "mean_ms": 0.2134,
+      "provider_calls_total": 3,
+      "provider_calls": {
+        "access": 1,
+        "resolve": 0,
+        "inspect": 1,
+        "file": 1
+      },
+      "model_visible_bytes": 563,
+      "token_approximation_4bytes": 140.75
+    },
+    {
+      "unrelated_records": 100000,
+      "label": "exact_unrelated_100000",
+      "mean_ms": 0.35,
+      "provider_calls_total": 3,
+      "provider_calls": {
+        "access": 1,
+        "resolve": 0,
+        "inspect": 1,
+        "file": 1
+      },
+      "model_visible_bytes": 563,
+      "token_approximation_4bytes": 140.75
+    }
+  ],
+  "router_metadata_scaling": [
+    {
+      "extra_routes": 0,
+      "router_bytes": 102,
+      "label": "route_growth_0",
+      "mean_ms": 0.2478,
+      "provider_calls_total": 5,
+      "provider_calls": {
+        "access": 1,
+        "resolve": 1,
+        "inspect": 1,
+        "file": 2
+      },
+      "model_visible_bytes": 851,
+      "token_approximation_4bytes": 212.75
+    },
+    {
+      "extra_routes": 100,
+      "router_bytes": 5382,
+      "label": "route_growth_100",
+      "mean_ms": 0.8044,
+      "provider_calls_total": 5,
+      "provider_calls": {
+        "access": 1,
+        "resolve": 1,
+        "inspect": 1,
+        "file": 2
+      },
+      "model_visible_bytes": 851,
+      "token_approximation_4bytes": 212.75
+    },
+    {
+      "extra_routes": 10000,
+      "router_bytes": 567882,
+      "label": "route_growth_10000",
+      "mean_ms": 23.4478,
+      "provider_calls_total": 5,
+      "provider_calls": {
+        "access": 1,
+        "resolve": 1,
+        "inspect": 1,
+        "file": 2
+      },
+      "model_visible_bytes": 851,
+      "token_approximation_4bytes": 212.75
+    },
+    {
+      "extra_routes": 100000,
+      "router_bytes": 5877882,
+      "label": "route_growth_100000",
+      "mean_ms": 334.159,
+      "provider_calls_total": 5,
+      "provider_calls": {
+        "access": 1,
+        "resolve": 1,
+        "inspect": 1,
+        "file": 2
+      },
+      "model_visible_bytes": 851,
+      "token_approximation_4bytes": 212.75
+    }
+  ],
+  "local_real_git": {
+    "exact_mean_ms": 8.7927,
+    "current_mean_ms": 9.1688
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "schema": "project.state/current-v1",
+  "phase": "p01",
+  "task": "p01t001",
+  "task_state_path": ".state/phases/p01/tasks/t001/state.json",
+  "task_detail_path": ".state/phases/p01/tasks/t001/task.md",
+  "updated": "2026-10-03T00:00:00Z",
+  "project_notes": {
+    "owner": "fixture-project",
+    "purpose": "unrelated field retained in source"
+  }
+}

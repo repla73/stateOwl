@@ -1,0 +1,788 @@
+{
+  "format": "stateowl.r2-native-state-fixture/1",
+  "protocol": "stateowl/0.2-draft.3",
+  "purpose": "Shared R2 proof for direct focused reads over project-owned native .state bytes.",
+  "state_root": ".state",
+  "stateowl_router_required": false,
+  "governance_semantics_in_core": false,
+  "identities": {
+    "opaque": {
+      "target": {
+        "kind": "memory",
+        "authority": "fixture.local",
+        "resource": "r2-native-state",
+        "namespace": "project-state"
+      },
+      "snapshot": {
+        "id": "opaque:r2-native-state:v1"
+      },
+      "current_resolves_to": {
+        "id": "opaque:r2-native-state:v1"
+      }
+    },
+    "git_sha1_finite_provider": {
+      "target": {
+        "kind": "git",
+        "authority": "github.com",
+        "resource": "fixture/r2-native-state",
+        "namespace": "refs/heads/state"
+      },
+      "snapshot": {
+        "id": "git:sha1:1111111111111111111111111111111111111111"
+      },
+      "note": "Synthetic finite-provider commit identity. A real Git materialization substitutes its exact commit snapshot; file digests and Git blob identities below remain byte-derived."
+    }
+  },
+  "files": [
+    {
+      "path": ".state/current.json",
+      "bytes": 355,
+      "digest": "sha256:10919fb1a38f86478329051b71c9745fb41b837532b20321ac1f911aab646786",
+      "git_blob_sha1": "git:sha1:c6bb6aa0cd35c4d423eee5e58bfe43900e980e37"
+    },
+    {
+      "path": ".state/phases/p01/phase.md",
+      "bytes": 96,
+      "digest": "sha256:87509f7f92a4ff1c74a4cb0ac9c32a2e535094fc5c1a8b0c26719f590a20d73f",
+      "git_blob_sha1": "git:sha1:183675abcc22fde3450564099e6eb007731bcc82"
+    },
+    {
+      "path": ".state/phases/p01/tasks/t001/state.json",
+      "bytes": 320,
+      "digest": "sha256:e6f531c459b7e861beb352267143664bd522a4a30b8bb49dc391237ee6bf35ed",
+      "git_blob_sha1": "git:sha1:8c1bde3767507cfec0bbc6604c854f909be74e6f"
+    },
+    {
+      "path": ".state/phases/p01/tasks/t001/task.md",
+      "bytes": 182,
+      "digest": "sha256:27f48e40d0b6fdecc162d0349fadc49b76069ad41ff036fece09fbf68bee91ed",
+      "git_blob_sha1": "git:sha1:9ecc7b5d3424a4c13a3dbd7e2d2665533fa34420"
+    }
+  ],
+  "git_source_overlay": {
+    "target": {
+      "kind": "git",
+      "authority": "github.com",
+      "resource": "fixture/r2-native-state",
+      "namespace": "refs/heads/state"
+    },
+    "snapshot": {
+      "id": "git:sha1:1111111111111111111111111111111111111111"
+    },
+    "objects": {
+      ".state/current.json": "git:sha1:c6bb6aa0cd35c4d423eee5e58bfe43900e980e37",
+      ".state/phases/p01/phase.md": "git:sha1:183675abcc22fde3450564099e6eb007731bcc82",
+      ".state/phases/p01/tasks/t001/state.json": "git:sha1:8c1bde3767507cfec0bbc6604c854f909be74e6f",
+      ".state/phases/p01/tasks/t001/task.md": "git:sha1:9ecc7b5d3424a4c13a3dbd7e2d2665533fa34420"
+    }
+  },
+  "cases": [
+    {
+      "id": "current-pointer",
+      "proves": [
+        "current_pointer",
+        "direct_path"
+      ],
+      "request": {
+        "protocol": "stateowl/0.2-draft.3",
+        "op": "read",
+        "target": {
+          "kind": "memory",
+          "authority": "fixture.local",
+          "resource": "r2-native-state",
+          "namespace": "project-state"
+        },
+        "at": {
+          "current": true
+        },
+        "records": [
+          {
+            "key": "current",
+            "path": ".state/current.json",
+            "format": "json",
+            "select": [
+              "phase",
+              "task",
+              "task_state_path",
+              "task_detail_path"
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "protocol": "stateowl/0.2-draft.3",
+        "op": "read",
+        "status": "ok",
+        "target": {
+          "kind": "memory",
+          "authority": "fixture.local",
+          "resource": "r2-native-state",
+          "namespace": "project-state"
+        },
+        "snapshot": {
+          "id": "opaque:r2-native-state:v1"
+        },
+        "records": [
+          {
+            "key": "current",
+            "status": "found",
+            "format": "json",
+            "value": {
+              "phase": "p01",
+              "task": "p01t001",
+              "task_state_path": ".state/phases/p01/tasks/t001/state.json",
+              "task_detail_path": ".state/phases/p01/tasks/t001/task.md"
+            },
+            "source": {
+              "path": ".state/current.json",
+              "digest": "sha256:10919fb1a38f86478329051b71c9745fb41b837532b20321ac1f911aab646786",
+              "integrity": "provider"
+            },
+            "select": [
+              "phase",
+              "task",
+              "task_state_path",
+              "task_detail_path"
+            ],
+            "missing": []
+          }
+        ]
+      },
+      "trace": {
+        "mutable_ref_resolutions": 1,
+        "file_reads": [
+          ".state/current.json"
+        ]
+      }
+    },
+    {
+      "id": "task-state",
+      "proves": [
+        "task_state",
+        "no_repository_discovery"
+      ],
+      "request": {
+        "protocol": "stateowl/0.2-draft.3",
+        "op": "read",
+        "target": {
+          "kind": "memory",
+          "authority": "fixture.local",
+          "resource": "r2-native-state",
+          "namespace": "project-state"
+        },
+        "at": {
+          "current": true
+        },
+        "records": [
+          {
+            "key": "task_state",
+            "path": ".state/phases/p01/tasks/t001/state.json",
+            "format": "json",
+            "select": [
+              "task",
+              "status",
+              "round"
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "protocol": "stateowl/0.2-draft.3",
+        "op": "read",
+        "status": "ok",
+        "target": {
+          "kind": "memory",
+          "authority": "fixture.local",
+          "resource": "r2-native-state",
+          "namespace": "project-state"
+        },
+        "snapshot": {
+          "id": "opaque:r2-native-state:v1"
+        },
+        "records": [
+          {
+            "key": "task_state",
+            "status": "found",
+            "format": "json",
+            "value": {
+              "task": "p01t001",
+              "status": "working",
+              "round": 2
+            },
+            "source": {
+              "path": ".state/phases/p01/tasks/t001/state.json",
+              "digest": "sha256:e6f531c459b7e861beb352267143664bd522a4a30b8bb49dc391237ee6bf35ed",
+              "integrity": "provider"
+            },
+            "select": [
+              "task",
+              "status",
+              "round"
+            ],
+            "missing": []
+          }
+        ]
+      },
+      "trace": {
+        "mutable_ref_resolutions": 1,
+        "file_reads": [
+          ".state/phases/p01/tasks/t001/state.json"
+        ]
+      }
+    },
+    {
+      "id": "same-snapshot-batch",
+      "proves": [
+        "same_snapshot_batch",
+        "single_root_resolution"
+      ],
+      "request": {
+        "protocol": "stateowl/0.2-draft.3",
+        "op": "read",
+        "target": {
+          "kind": "memory",
+          "authority": "fixture.local",
+          "resource": "r2-native-state",
+          "namespace": "project-state"
+        },
+        "at": {
+          "current": true
+        },
+        "records": [
+          {
+            "key": "current",
+            "path": ".state/current.json",
+            "format": "json",
+            "select": [
+              "phase",
+              "task",
+              "task_state_path",
+              "task_detail_path"
+            ]
+          },
+          {
+            "key": "task_state",
+            "path": ".state/phases/p01/tasks/t001/state.json",
+            "format": "json",
+            "select": [
+              "task",
+              "status",
+              "round"
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "protocol": "stateowl/0.2-draft.3",
+        "op": "read",
+        "status": "ok",
+        "target": {
+          "kind": "memory",
+          "authority": "fixture.local",
+          "resource": "r2-native-state",
+          "namespace": "project-state"
+        },
+        "snapshot": {
+          "id": "opaque:r2-native-state:v1"
+        },
+        "records": [
+          {
+            "key": "current",
+            "status": "found",
+            "format": "json",
+            "value": {
+              "phase": "p01",
+              "task": "p01t001",
+              "task_state_path": ".state/phases/p01/tasks/t001/state.json",
+              "task_detail_path": ".state/phases/p01/tasks/t001/task.md"
+            },
+            "source": {
+              "path": ".state/current.json",
+              "digest": "sha256:10919fb1a38f86478329051b71c9745fb41b837532b20321ac1f911aab646786",
+              "integrity": "provider"
+            },
+            "select": [
+              "phase",
+              "task",
+              "task_state_path",
+              "task_detail_path"
+            ],
+            "missing": []
+          },
+          {
+            "key": "task_state",
+            "status": "found",
+            "format": "json",
+            "value": {
+              "task": "p01t001",
+              "status": "working",
+              "round": 2
+            },
+            "source": {
+              "path": ".state/phases/p01/tasks/t001/state.json",
+              "digest": "sha256:e6f531c459b7e861beb352267143664bd522a4a30b8bb49dc391237ee6bf35ed",
+              "integrity": "provider"
+            },
+            "select": [
+              "task",
+              "status",
+              "round"
+            ],
+            "missing": []
+          }
+        ]
+      },
+      "trace": {
+        "mutable_ref_resolutions": 1,
+        "file_reads": [
+          ".state/current.json",
+          ".state/phases/p01/tasks/t001/state.json"
+        ],
+        "all_records_snapshot": "opaque:r2-native-state:v1"
+      }
+    },
+    {
+      "id": "text-detail",
+      "proves": [
+        "text_detail"
+      ],
+      "request": {
+        "protocol": "stateowl/0.2-draft.3",
+        "op": "read",
+        "target": {
+          "kind": "memory",
+          "authority": "fixture.local",
+          "resource": "r2-native-state",
+          "namespace": "project-state"
+        },
+        "at": {
+          "current": true
+        },
+        "records": [
+          {
+            "key": "task_detail",
+            "path": ".state/phases/p01/tasks/t001/task.md",
+            "format": "text"
+          }
+        ]
+      },
+      "expected": {
+        "protocol": "stateowl/0.2-draft.3",
+        "op": "read",
+        "status": "ok",
+        "target": {
+          "kind": "memory",
+          "authority": "fixture.local",
+          "resource": "r2-native-state",
+          "namespace": "project-state"
+        },
+        "snapshot": {
+          "id": "opaque:r2-native-state:v1"
+        },
+        "records": [
+          {
+            "key": "task_detail",
+            "status": "found",
+            "format": "text",
+            "value": "# p01t001 — Native fixture task\n\nThis is project-owned text.\n\nstateOwl returns these bytes as text and does not interpret lifecycle, review, approval, policy, or effect semantics.\n",
+            "source": {
+              "path": ".state/phases/p01/tasks/t001/task.md",
+              "digest": "sha256:27f48e40d0b6fdecc162d0349fadc49b76069ad41ff036fece09fbf68bee91ed",
+              "integrity": "provider"
+            }
+          }
+        ]
+      },
+      "trace": {
+        "mutable_ref_resolutions": 1,
+        "file_reads": [
+          ".state/phases/p01/tasks/t001/task.md"
+        ]
+      }
+    },
+    {
+      "id": "projection",
+      "proves": [
+        "projection",
+        "unselected_fields_omitted"
+      ],
+      "request": {
+        "protocol": "stateowl/0.2-draft.3",
+        "op": "read",
+        "target": {
+          "kind": "memory",
+          "authority": "fixture.local",
+          "resource": "r2-native-state",
+          "namespace": "project-state"
+        },
+        "at": {
+          "current": true
+        },
+        "records": [
+          {
+            "key": "task_state",
+            "path": ".state/phases/p01/tasks/t001/state.json",
+            "format": "json",
+            "select": [
+              "task",
+              "status"
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "protocol": "stateowl/0.2-draft.3",
+        "op": "read",
+        "status": "ok",
+        "target": {
+          "kind": "memory",
+          "authority": "fixture.local",
+          "resource": "r2-native-state",
+          "namespace": "project-state"
+        },
+        "snapshot": {
+          "id": "opaque:r2-native-state:v1"
+        },
+        "records": [
+          {
+            "key": "task_state",
+            "status": "found",
+            "format": "json",
+            "value": {
+              "task": "p01t001",
+              "status": "working"
+            },
+            "source": {
+              "path": ".state/phases/p01/tasks/t001/state.json",
+              "digest": "sha256:e6f531c459b7e861beb352267143664bd522a4a30b8bb49dc391237ee6bf35ed",
+              "integrity": "provider"
+            },
+            "select": [
+              "task",
+              "status"
+            ],
+            "missing": []
+          }
+        ]
+      },
+      "assertions": {
+        "not_returned": [
+          "schema",
+          "round",
+          "review",
+          "approval",
+          "governance_binding",
+          "effects",
+          "unrelated"
+        ]
+      },
+      "trace": {
+        "mutable_ref_resolutions": 1,
+        "file_reads": [
+          ".state/phases/p01/tasks/t001/state.json"
+        ]
+      }
+    },
+    {
+      "id": "no-duplicate-index",
+      "proves": [
+        "no_duplicate_index",
+        "direct_path"
+      ],
+      "request": {
+        "protocol": "stateowl/0.2-draft.3",
+        "op": "read",
+        "target": {
+          "kind": "memory",
+          "authority": "fixture.local",
+          "resource": "r2-native-state",
+          "namespace": "project-state"
+        },
+        "at": {
+          "current": true
+        },
+        "records": [
+          {
+            "key": "current",
+            "path": ".state/current.json",
+            "format": "json",
+            "select": [
+              "task",
+              "task_state_path"
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "protocol": "stateowl/0.2-draft.3",
+        "op": "read",
+        "status": "ok",
+        "target": {
+          "kind": "memory",
+          "authority": "fixture.local",
+          "resource": "r2-native-state",
+          "namespace": "project-state"
+        },
+        "snapshot": {
+          "id": "opaque:r2-native-state:v1"
+        },
+        "records": [
+          {
+            "key": "current",
+            "status": "found",
+            "format": "json",
+            "value": {
+              "task": "p01t001",
+              "task_state_path": ".state/phases/p01/tasks/t001/state.json"
+            },
+            "source": {
+              "path": ".state/current.json",
+              "digest": "sha256:10919fb1a38f86478329051b71c9745fb41b837532b20321ac1f911aab646786",
+              "integrity": "provider"
+            },
+            "select": [
+              "task",
+              "task_state_path"
+            ],
+            "missing": []
+          }
+        ]
+      },
+      "assertions": {
+        "fixture_path_absent": ".stateowl/router.json",
+        "resolver_field_absent": true,
+        "routing_response_absent": true
+      },
+      "trace": {
+        "mutable_ref_resolutions": 1,
+        "file_reads": [
+          ".state/current.json"
+        ]
+      }
+    },
+    {
+      "id": "exact-read",
+      "proves": [
+        "exact_read",
+        "same_snapshot_batch"
+      ],
+      "request": {
+        "protocol": "stateowl/0.2-draft.3",
+        "op": "read",
+        "target": {
+          "kind": "memory",
+          "authority": "fixture.local",
+          "resource": "r2-native-state",
+          "namespace": "project-state"
+        },
+        "at": {
+          "snapshot": {
+            "id": "opaque:r2-native-state:v1"
+          }
+        },
+        "records": [
+          {
+            "key": "current",
+            "path": ".state/current.json",
+            "format": "json",
+            "select": [
+              "phase",
+              "task",
+              "task_state_path",
+              "task_detail_path"
+            ]
+          },
+          {
+            "key": "task_state",
+            "path": ".state/phases/p01/tasks/t001/state.json",
+            "format": "json",
+            "select": [
+              "task",
+              "status",
+              "round"
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "protocol": "stateowl/0.2-draft.3",
+        "op": "read",
+        "status": "ok",
+        "target": {
+          "kind": "memory",
+          "authority": "fixture.local",
+          "resource": "r2-native-state",
+          "namespace": "project-state"
+        },
+        "snapshot": {
+          "id": "opaque:r2-native-state:v1"
+        },
+        "records": [
+          {
+            "key": "current",
+            "status": "found",
+            "format": "json",
+            "value": {
+              "phase": "p01",
+              "task": "p01t001",
+              "task_state_path": ".state/phases/p01/tasks/t001/state.json",
+              "task_detail_path": ".state/phases/p01/tasks/t001/task.md"
+            },
+            "source": {
+              "path": ".state/current.json",
+              "digest": "sha256:10919fb1a38f86478329051b71c9745fb41b837532b20321ac1f911aab646786",
+              "integrity": "provider"
+            },
+            "select": [
+              "phase",
+              "task",
+              "task_state_path",
+              "task_detail_path"
+            ],
+            "missing": []
+          },
+          {
+            "key": "task_state",
+            "status": "found",
+            "format": "json",
+            "value": {
+              "task": "p01t001",
+              "status": "working",
+              "round": 2
+            },
+            "source": {
+              "path": ".state/phases/p01/tasks/t001/state.json",
+              "digest": "sha256:e6f531c459b7e861beb352267143664bd522a4a30b8bb49dc391237ee6bf35ed",
+              "integrity": "provider"
+            },
+            "select": [
+              "task",
+              "status",
+              "round"
+            ],
+            "missing": []
+          }
+        ]
+      },
+      "trace": {
+        "mutable_ref_resolutions": 0,
+        "file_reads": [
+          ".state/current.json",
+          ".state/phases/p01/tasks/t001/state.json"
+        ],
+        "all_records_snapshot": "opaque:r2-native-state:v1"
+      }
+    },
+    {
+      "id": "current-read",
+      "proves": [
+        "current_read",
+        "same_snapshot_batch"
+      ],
+      "request": {
+        "protocol": "stateowl/0.2-draft.3",
+        "op": "read",
+        "target": {
+          "kind": "memory",
+          "authority": "fixture.local",
+          "resource": "r2-native-state",
+          "namespace": "project-state"
+        },
+        "at": {
+          "current": true
+        },
+        "records": [
+          {
+            "key": "current",
+            "path": ".state/current.json",
+            "format": "json",
+            "select": [
+              "phase",
+              "task",
+              "task_state_path",
+              "task_detail_path"
+            ]
+          },
+          {
+            "key": "task_state",
+            "path": ".state/phases/p01/tasks/t001/state.json",
+            "format": "json",
+            "select": [
+              "task",
+              "status",
+              "round"
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "protocol": "stateowl/0.2-draft.3",
+        "op": "read",
+        "status": "ok",
+        "target": {
+          "kind": "memory",
+          "authority": "fixture.local",
+          "resource": "r2-native-state",
+          "namespace": "project-state"
+        },
+        "snapshot": {
+          "id": "opaque:r2-native-state:v1"
+        },
+        "records": [
+          {
+            "key": "current",
+            "status": "found",
+            "format": "json",
+            "value": {
+              "phase": "p01",
+              "task": "p01t001",
+              "task_state_path": ".state/phases/p01/tasks/t001/state.json",
+              "task_detail_path": ".state/phases/p01/tasks/t001/task.md"
+            },
+            "source": {
+              "path": ".state/current.json",
+              "digest": "sha256:10919fb1a38f86478329051b71c9745fb41b837532b20321ac1f911aab646786",
+              "integrity": "provider"
+            },
+            "select": [
+              "phase",
+              "task",
+              "task_state_path",
+              "task_detail_path"
+            ],
+            "missing": []
+          },
+          {
+            "key": "task_state",
+            "status": "found",
+            "format": "json",
+            "value": {
+              "task": "p01t001",
+              "status": "working",
+              "round": 2
+            },
+            "source": {
+              "path": ".state/phases/p01/tasks/t001/state.json",
+              "digest": "sha256:e6f531c459b7e861beb352267143664bd522a4a30b8bb49dc391237ee6bf35ed",
+              "integrity": "provider"
+            },
+            "select": [
+              "task",
+              "status",
+              "round"
+            ],
+            "missing": []
+          }
+        ]
+      },
+      "trace": {
+        "mutable_ref_resolutions": 1,
+        "file_reads": [
+          ".state/current.json",
+          ".state/phases/p01/tasks/t001/state.json"
+        ],
+        "all_records_snapshot": "opaque:r2-native-state:v1"
+      }
+    }
+  ]
+}
