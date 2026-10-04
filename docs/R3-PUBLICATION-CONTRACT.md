@@ -45,7 +45,7 @@ Trusted project integration/configuration owns:
 - resolving the required validation binding for the target and expected state;
 - determining whether the trusted validator implementation is available;
 - comparing the request validation pin with the independently resolved binding;
-- supplying project and path authority from trusted configuration;
+- supplying project and path authority from trusted configuration, with change-path authorization decided before expected-state/source reads;
 - validating old state and complete candidate state together;
 - preventing candidate data from selecting, replacing, disabling, or weakening its own validator.
 
@@ -84,13 +84,14 @@ A stateOwl publisher MUST NOT move these responsibilities into the core or silen
 
 ## 3. R1 harness projection used by R3
 
-R3 reuses the accepted stateowl.fixtures/3 provider/fault harness. The black-box adapter sees only the expanded request, capabilities, and provider returns/faults.
+R3 reuses the accepted stateowl.fixtures/3 provider/fault harness. W1 adds one narrow fixture-only `authorize` call because the R1 harness carried whole-project authority but no path-specific authorization fact. This is a test dependency hook, not a protocol operation or a Git-provider API. The black-box adapter sees only the expanded request, capabilities, and provider returns/faults.
 
 Relevant provider calls remain exactly those in docs/protocol/HARNESS.md:
 
 | Harness call | R3 use |
 |---|---|
 | access | authentication/access result, required validation identity, validator availability, project authority, continuity |
+| authorize | trusted publication change-path authorization before expected-state/source reads |
 | resolve | one fresh mutable namespace observation |
 | inspect | commit parents and raw receipt-bearing commit metadata |
 | tree | finite complete-state/candidate verification primitive |
