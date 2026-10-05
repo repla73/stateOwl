@@ -248,7 +248,6 @@ export class Publisher {
   private async submit():Promise<any>{
     const r=this.prepared!.request,a=this.accessResult!;
     await this.exactExpected();
-    const authority=this.capabilities.publication!.authority;if((authority==="project_validated"&&a.validation===null)||(authority==="mechanical"&&a.validation!==null))throw new ProtocolError("UNSUPPORTED_CAPABILITY");
     if(r.validation!==a.validation)throw new ProtocolError("VALIDATION_FAILED");
     if(r.validation!==null&&!a.validator_available)throw new ProtocolError("UNSUPPORTED_CAPABILITY");
     if(!a.project_authorized)throw new ProtocolError("FORBIDDEN");
