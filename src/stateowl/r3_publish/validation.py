@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+from decimal import Decimal
 import json
+import math
 import re
 from typing import Any
 
@@ -40,10 +42,18 @@ def _strict_request_json(raw: bytes, depth: int) -> Any:
                 out[key] = value
             return out
 
-        def invalid_number(_: str) -> Any:
-            # PublishRequest contains no numeric wire fields. Reject before schema
-            # handling rather than silently accepting unsafe or negative-zero forms.
-            raise PublicationFault("INVALID_REQUEST")
+        def number(token: str) -> int | float:
+            value = Decimal(token)
+            if value.is_zero() and value.is_signed():
+                raise PublicationFault("INVALID_REQUEST")
+            if value == value.to_integral_value():
+                if abs(value) > MAX_SAFE:
+                    raise PublicationFault("NUMBER_UNREPRESENTABLE")
+                return int(value)
+            binary64 = float(value)
+            if not math.isfinite(binary64) or Decimal(repr(binary64)) != value:
+                raise PublicationFault("NUMBER_UNREPRESENTABLE")
+            return binary64
 
         def invalid_constant(_: str) -> Any:
             raise PublicationFault("INVALID_REQUEST")
@@ -51,8 +61,8 @@ def _strict_request_json(raw: bytes, depth: int) -> Any:
         value = json.loads(
             text,
             object_pairs_hook=pairs,
-            parse_int=invalid_number,
-            parse_float=invalid_number,
+            parse_int=number,
+            parse_float=number,
             parse_constant=invalid_constant,
         )
         def verify_strings(item: Any) -> None:
@@ -69,7 +79,7 @@ def _strict_request_json(raw: bytes, depth: int) -> Any:
         return value
     except PublicationFault:
         raise
-    except (UnicodeError, ValueError, RecursionError):
+    except (UnicodeError, ValueError, OverflowError, RecursionError):
         raise PublicationFault("INVALID_REQUEST") from None
 
 
