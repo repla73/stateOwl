@@ -6,6 +6,7 @@ import math
 import re
 from typing import Any
 
+from ..r2_jcs import _float_text
 from .types import PROTOCOL, MAX_SAFE, PublicationFault
 from .codec import _binding_valid, _bytes_value, _collision, _path_valid, _ref_valid
 
@@ -51,7 +52,7 @@ def _strict_request_json(raw: bytes, depth: int) -> Any:
                     raise PublicationFault("NUMBER_UNREPRESENTABLE")
                 return int(value)
             binary64 = float(value)
-            if not math.isfinite(binary64) or Decimal(repr(binary64)) != value:
+            if not math.isfinite(binary64) or Decimal(_float_text(binary64)) != value:
                 raise PublicationFault("NUMBER_UNREPRESENTABLE")
             return binary64
 
