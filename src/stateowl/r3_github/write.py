@@ -78,7 +78,8 @@ class GitHubWriteMixin:
                 raise PublicationFault("INVALID_SOURCE")
             self._typed(sha)
             try:
-                if payload["message"] != message or payload["tree"]["sha"] != tree_sha:
+                exact_message = self._exact_commit_message(payload, sha)
+                if exact_message != message or payload["tree"]["sha"] != tree_sha:
                     raise PublicationFault("INTEGRITY_MISMATCH")
                 parents = payload["parents"]
                 if not isinstance(parents, list) or [parent["sha"] for parent in parents] != [expected_raw]:

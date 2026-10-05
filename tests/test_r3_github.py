@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import base64
+from datetime import datetime
 import hashlib
 from pathlib import Path
 import unittest
@@ -19,6 +20,32 @@ A = "git:sha1:" + A_RAW
 
 def blob_sha(raw: bytes) -> str:
     return hashlib.sha1(b"blob " + str(len(raw)).encode("ascii") + b"\0" + raw).hexdigest()
+
+def commit_payload(message: str, tree: str, parents: list[str], *, api_message: str | None = None):
+    author = {"name": "State Owl", "email": "stateowl@example.invalid", "date": "2026-10-06T01:02:03Z"}
+    committer = {"name": "State Owl", "email": "stateowl@example.invalid", "date": "2026-10-06T01:02:04Z"}
+
+    def ident(actor):
+        instant = datetime.fromisoformat(actor["date"].replace("Z", "+00:00"))
+        return f'{actor["name"]} <{actor["email"]}> {int(instant.timestamp())} +0000'
+
+    body = (
+        f"tree {tree}\n"
+        + "".join(f"parent {parent}\n" for parent in parents)
+        + f"author {ident(author)}\n"
+        + f"committer {ident(committer)}\n\n"
+        + message
+    ).encode("utf-8")
+    sha = hashlib.sha1(b"commit " + str(len(body)).encode("ascii") + b"\0" + body).hexdigest()
+    return {
+        "sha": sha,
+        "message": message if api_message is None else api_message,
+        "tree": {"sha": tree},
+        "parents": [{"sha": parent} for parent in parents],
+        "author": author,
+        "committer": committer,
+        "verification": {"verified": False, "reason": "unsigned", "signature": None, "payload": None, "verified_at": None},
+    }
 
 TARGET = {
     "kind": "git",
@@ -100,7 +127,7 @@ class GitHubProviderTests(unittest.TestCase):
         self.assertTrue(transport.dispatch_uncertain)
 
     def test_exact_commit_tree_and_blob_reads_preserve_mode_and_message(self):
-        message = "stateOwl publication\n\nStateOwl-Receipt: YQ==\n"
+        message = "ordinary commit\n"
         tree_sha = "d" * 40
         blob = b"#!/bin/sh\n"
         blob_oid = blob_sha(blob)
@@ -145,6 +172,7 @@ class GitHubProviderTests(unittest.TestCase):
             "state/work": {"base64": base64.b64encode(b"new\n").decode(), "mode": "100644"},
             "state/new": {"base64": base64.b64encode(b"").decode(), "mode": "100644"},
         }
+        created = commit_payload(message, new_tree, [A_RAW], api_message=message[:-1])
 
         def callback(call):
             url = call["url"]
@@ -165,22 +193,17 @@ class GitHubProviderTests(unittest.TestCase):
                 return HTTPResponse(201, {"sha": new_tree}, {})
             if call["method"] == "POST" and url.endswith("/git/commits"):
                 self.assertEqual(call["payload"], {"message": message, "tree": new_tree, "parents": [A_RAW]})
-                return HTTPResponse(201, {
-                    "sha": B_RAW,
-                    "message": message,
-                    "tree": {"sha": new_tree},
-                    "parents": [{"sha": A_RAW}],
-                }, {})
+                return HTTPResponse(201, created, {})
             if url.endswith("/graphql"):
                 update = call["payload"]["variables"]["input"]["refUpdates"]
                 self.assertEqual(update[0]["beforeOid"], A_RAW)
-                self.assertEqual(update[0]["afterOid"], B_RAW)
+                self.assertEqual(update[0]["afterOid"], created["sha"])
                 return HTTPResponse(200, {"data": {"updateRefs": {"clientMutationId": None}}}, {})
             raise AssertionError(call)
 
         transport = CallbackTransport(callback)
         result = self.provider(transport).admit(TARGET, A, candidate, message)
-        self.assertEqual(result, {"status": "admitted", "snapshot": "git:sha1:" + B_RAW})
+        self.assertEqual(result, {"status": "admitted", "snapshot": "git:sha1:" + created["sha"]})
         graphql = [call for call in transport.calls if call["url"].endswith("/graphql")]
         self.assertEqual(len(graphql), 1)
 
