@@ -179,7 +179,6 @@ export class Publisher {
     try{
       const r=this.prepared.request;
       if(!this.capabilities.operations.includes("publish")||!this.capabilities.publication||this.capabilities.publication.continuity!=="single_step_required"||this.capabilities.publication.receipt_format!=="stateowl.git-receipt/2"||this.capabilities.publication.receipt_retention!=="reachable_history"||!["mechanical","project_validated"].includes(this.capabilities.publication.authority))throw new ProtocolError("UNSUPPORTED_CAPABILITY");
-      if(r.target.kind==="git"&&!r.target.namespace.startsWith("refs/heads/"))throw new ProtocolError("UNSUPPORTED_CAPABILITY");
       this.accessResult=await this.access(r.target);
       if(r.target.kind==="git"&&!r.target.namespace.startsWith("refs/heads/"))throw new ProtocolError("UNSUPPORTED_CAPABILITY");
       await this.authorize(r.target,this.prepared.changes.map(c=>c.path));
