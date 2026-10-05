@@ -1,0 +1,59 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { Publisher, PublicationProviderFailure, publicationIdentity, receiptMessage, parseReceipt, type AdmissionResult, type ProjectValidationBoundary, type PublicationAccess, type PublicationProvider, type PublicationTree, type PublishRequest } from "../src/publication.js";
+import { PROTOCOL, ProtocolError, type Capabilities, type InspectResult, type Target } from "../src/types.js";
+
+const A="git:sha1:"+"a".repeat(40), B="git:sha1:"+"b".repeat(40), C="git:sha1:"+"c".repeat(40);
+const target:Target={kind:"git",authority:"github.com",resource:"fixture/project",namespace:"refs/heads/state"};
+const caps:Capabilities={protocol:PROTOCOL,operations:["read","publish"],formats:["json"],features:[],resolvers:[],limits:{request_bytes:65536,record_bytes:16384,mutation_bytes:32768,response_bytes:65536,records:32,expansions:16,changes:32,tag_hops:8,reconcile_commits:16,json_depth:64},publication:{continuity:"single_step_required",receipt_format:"stateowl.git-receipt/2",receipt_retention:"reachable_history",authority:"project_validated"}};
+const old:PublicationTree={"state/a":{base64:Buffer.from("old\n").toString("base64"),mode:"100644"},"state/script":{base64:Buffer.from("#!/bin/sh\n").toString("base64"),mode:"100755"},"state/untouched":{base64:Buffer.from("keep\n").toString("base64"),mode:"100644"}};
+const req=(patch:Partial<PublishRequest>={}):PublishRequest=>({protocol:PROTOCOL,op:"publish",target,expected:{id:A},mode:"submit",validation:"urn:test:v1",changes:[{path:"state/a",put:{encoding:"utf8",data:"new\n"}}],...patch});
+class Fake implements PublicationProvider,ProjectValidationBoundary {
+ head=A; objects=new Map<string,{parents:string[];message:string;tree:PublicationTree}>([[A,{parents:[],message:"base\n",tree:structuredClone(old)}]]); continuity:PublicationAccess["continuity"]="intact"; required:string|null="urn:test:v1"; validator=true; project=true; deny=new Set<string>(); admitFault?:{code:any;dispatched:boolean}; afterAdmitHead?:string; next=B; validateCalls=0; admitCalls=0;
+ async access():Promise<PublicationAccess>{return {validation:this.required,validator_available:this.validator,project_authorized:this.project,continuity:this.continuity,auth_scope:"test"};}
+ async authorize(_t:Target,_o:"publish",paths:string[]){if(paths.some(p=>this.deny.has(p)))throw new ProtocolError("FORBIDDEN");return true;}
+ async validate(_t:Target,_e:string,_b:string,_old:PublicationTree,_candidate:PublicationTree){this.validateCalls++;return true;}
+ async resolve(){if(!this.head)throw new ProtocolError("NOT_FOUND");return this.head;}
+ async inspect(_t:Target,s:string):Promise<InspectResult>{const o=this.objects.get(s);if(!o)throw new ProtocolError("SNAPSHOT_UNAVAILABLE");return {id:s,type:"commit",parents:o.parents,message:o.message};}
+ async tree(_t:Target,s:string){const o=this.objects.get(s);if(!o)throw new ProtocolError("SNAPSHOT_UNAVAILABLE");return structuredClone(o.tree);}
+ async admit(_t:Target,expected:string,candidate:PublicationTree,message:string):Promise<AdmissionResult>{this.admitCalls++;if(this.admitFault){if(this.admitFault.dispatched&&this.head===expected){this.objects.set(this.next,{parents:[expected],message,tree:structuredClone(candidate)});this.head=this.next;}throw new PublicationProviderFailure(this.admitFault.code,this.admitFault.dispatched);}if(this.head!==expected)return {status:"conflict"};this.objects.set(this.next,{parents:[expected],message,tree:structuredClone(candidate)});this.head=this.next;if(this.afterAdmitHead)this.head=this.afterAdmitHead;return {status:"admitted",snapshot:this.next};}
+}
+
+test("publication identity excludes mode and normalizes encoding/order",()=>{const a=req({changes:[{path:"z",put:{encoding:"utf8",data:"x"}},{path:"a",put:{encoding:"base64",data:"eA=="}}]});const b=req({mode:"reconcile",changes:[{path:"a",put:{encoding:"utf8",data:"x"}},{path:"z",put:{encoding:"base64",data:"eA=="}}]});assert.equal(publicationIdentity(a).digest,publicationIdentity(b).digest);});
+test("receipt exact codec",()=>{const id=publicationIdentity(req()).identity;const msg=receiptMessage(id);assert.deepEqual(parseReceipt(msg),id);assert.deepEqual(parseReceipt(receiptMessage(id,false)),id);for(const bad of [msg+"\n"," "+msg,msg.replace("StateOwl-Receipt: ","StateOwl-Receipt:  "),msg.replace(/\n$/,"\r\n")])assert.throws(()=>parseReceipt(bad),/INVALID_SOURCE/);});
+test("normal committed preserves untouched and executable mode",async()=>{const f=new Fake();const out=await new Publisher(f,f,structuredClone(caps)).publish(req({changes:[{path:"state/script",put:{encoding:"utf8",data:"echo r3\n"}},{path:"state/new",put:{encoding:"utf8",data:""}}]}));assert.equal(out.outcome,"committed");const tree=await f.tree(target,B);assert.equal(tree["state/script"].mode,"100755");assert.equal(tree["state/new"].mode,"100644");assert.deepEqual(tree["state/untouched"],old["state/untouched"]);});
+test("stale conflict becomes not_committed after bounded reconciliation",async()=>{const f=new Fake();f.objects.set(C,{parents:[A],message:"other\n",tree:structuredClone(old)});f.head=C;const out=await new Publisher(f,f,structuredClone(caps)).publish(req());assert.equal(out.outcome,"not_committed");assert.equal(out.error.code,"CONFLICT");assert.equal(f.admitCalls,1);});
+test("identical conflict recovery is committed with no second admission",async()=>{const f=new Fake();const r=req();const candidate=structuredClone(old);candidate["state/a"]={base64:Buffer.from("new\n").toString("base64"),mode:"100644"};f.objects.set(B,{parents:[A],message:receiptMessage(publicationIdentity(r).identity),tree:candidate});f.head=B;const out=await new Publisher(f,f,structuredClone(caps)).publish(r);assert.equal(out.outcome,"committed");assert.equal(out.snapshot.id,B);assert.equal(f.admitCalls,1);});
+test("lost response is indeterminate and reconcile never admits",async()=>{const f=new Fake();f.admitFault={code:"PROVIDER_UNAVAILABLE",dispatched:true};const r=req();const first=await new Publisher(f,f,structuredClone(caps)).publish(r);assert.equal(first.outcome,"indeterminate");assert.equal(f.admitCalls,1);f.admitFault=undefined;const second=await new Publisher(f,f,structuredClone(caps)).publish({...r,mode:"reconcile"});assert.equal(second.outcome,"committed");assert.equal(f.admitCalls,1);});
+test("verification failure after positive admission is pending",async()=>{const f=new Fake();const orig=f.tree.bind(f);let n=0;f.tree=async(t,s)=>{n++;if(n===2)throw new ProtocolError("PROVIDER_UNAVAILABLE");return orig(t,s)};const out=await new Publisher(f,f,structuredClone(caps)).publish(req());assert.equal(out.outcome,"verification_pending");assert.equal(out.snapshot.id,B);assert.equal(out.error.retry,"reconcile");});
+test("validation pin, validator availability, project authority and path denial are pre-dispatch",async()=>{for(const setup of [(f:Fake)=>f.required="urn:test:v2",(f:Fake)=>f.validator=false,(f:Fake)=>f.project=false,(f:Fake)=>f.deny.add("state/a")]){const f=new Fake();setup(f);const out=await new Publisher(f,f,structuredClone(caps)).publish(req());assert.equal(f.admitCalls,0);assert.equal(out.outcome,"not_committed");}});
+test("no-change and delete-missing fail without admission",async()=>{let f=new Fake();let out=await new Publisher(f,f,structuredClone(caps)).publish(req({changes:[{path:"state/a",put:{encoding:"utf8",data:"old\n"}}]}));assert.equal(out.error.code,"NO_CHANGE");assert.equal(f.admitCalls,0);f=new Fake();out=await new Publisher(f,f,structuredClone(caps)).publish(req({changes:[{path:"missing",delete:true}]}));assert.equal(out.error.code,"NOT_FOUND");assert.equal(f.admitCalls,0);});
+test("reconcile same head is indeterminate and performs zero admission",async()=>{const f=new Fake();const out=await new Publisher(f,f,structuredClone(caps)).publish(req({mode:"reconcile"}));assert.equal(out.outcome,"indeterminate");assert.equal(out.error.code,"PROVIDER_UNAVAILABLE");assert.equal(f.admitCalls,0);});
+
+test("successor head preserves a verified committed publication",async()=>{
+ const f=new Fake();f.objects.set(C,{parents:[B],message:"later\n",tree:structuredClone(old)});f.afterAdmitHead=C;
+ const out=await new Publisher(f,f,structuredClone(caps)).publish(req());assert.equal(out.outcome,"committed");assert.equal(out.snapshot.id,B);assert.equal(out.observed_head.id,C);
+});
+
+test("bounded reconciliation returns indeterminate when the limit cannot reach expected",async()=>{
+ const f=new Fake();const r=req({mode:"reconcile"});const candidate=structuredClone(old);candidate["state/a"]={base64:Buffer.from("new\n").toString("base64"),mode:"100644"};
+ f.objects.set(B,{parents:[A],message:receiptMessage(publicationIdentity(r).identity),tree:candidate});f.objects.set(C,{parents:[B],message:"later\n",tree:candidate});f.head=C;
+ const limited=structuredClone(caps);limited.limits.reconcile_commits=1;const out=await new Publisher(f,f,limited).publish(r);assert.equal(out.outcome,"indeterminate");assert.equal(out.error.code,"HISTORY_UNAVAILABLE");assert.equal(f.admitCalls,0);
+});
+
+test("reconciliation rejects malformed receipt and excludes wrong valid receipt",async()=>{
+ let f=new Fake();f.objects.set(B,{parents:[A],message:"StateOwl-Receipt: AB==\n",tree:structuredClone(old)});f.head=B;let out=await new Publisher(f,f,structuredClone(caps)).publish(req({mode:"reconcile"}));assert.equal(out.outcome,"indeterminate");assert.equal(out.error.code,"INVALID_SOURCE");
+ f=new Fake();const other=req({changes:[{path:"state/a",put:{encoding:"utf8",data:"other\n"}}]});f.objects.set(B,{parents:[A],message:receiptMessage(publicationIdentity(other).identity),tree:structuredClone(old)});f.head=B;out=await new Publisher(f,f,structuredClone(caps)).publish(req({mode:"reconcile"}));assert.equal(out.outcome,"not_committed");assert.equal(out.error.code,"CONFLICT");
+});
+
+test("skipped-head continuity after positive admission is verification_pending",async()=>{
+ const f=new Fake();f.objects.set(C,{parents:[A],message:"skipped\n",tree:structuredClone(old)});f.afterAdmitHead=C;
+ f.access=async()=>({validation:f.required,validator_available:f.validator,project_authorized:f.project,continuity:f.head===C?"reset":"intact",auth_scope:"test"});
+ const out=await new Publisher(f,f,structuredClone(caps)).publish(req());assert.equal(out.outcome,"verification_pending");assert.equal(out.snapshot.id,B);assert.equal(out.error.code,"NAMESPACE_DISCONTINUITY");
+});
+
+test("validator mismatch, self-downgrade and unauthorized path return exact pre-dispatch errors",async()=>{
+ let f=new Fake();f.required="urn:test:v2";let out=await new Publisher(f,f,structuredClone(caps)).publish(req());assert.equal(out.error.code,"VALIDATION_FAILED");assert.equal(f.admitCalls,0);
+ f=new Fake();f.validate=async(_t:Target,_e:string,_b:string,oldState:PublicationTree,candidate:PublicationTree)=>{f.validateCalls++;if(oldState["state/policy"]?.base64!==candidate["state/policy"]?.base64)throw new ProtocolError("VALIDATION_FAILED");return true;};f.objects.get(A)!.tree["state/policy"]={base64:Buffer.from("enabled\n").toString("base64"),mode:"100644"};out=await new Publisher(f,f,structuredClone(caps)).publish(req({changes:[{path:"state/policy",put:{encoding:"utf8",data:"disabled\n"}}]}));assert.equal(out.error.code,"VALIDATION_FAILED");assert.equal(f.validateCalls,1);assert.equal(f.admitCalls,0);
+ f=new Fake();f.deny.add("state/a");out=await new Publisher(f,f,structuredClone(caps)).publish(req());assert.equal(out.error.code,"FORBIDDEN");assert.equal(f.admitCalls,0);
+});
