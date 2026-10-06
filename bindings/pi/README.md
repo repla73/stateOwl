@@ -44,6 +44,10 @@ pi --extension ./bindings/pi/index.ts
 
 W4 records the actual Pi, Node, stateOwl subject, authentication source category, and cold-start/install observations. This binding does not impose a new runtime version pin.
 
+## Qualification evidence
+
+Each tool result keeps the stateOwl semantic JSON as the only model-facing text. Non-model-facing Pi `details` also record the HTTP/GraphQL provider-operation count, the requested state paths, and the exact UTF-8 byte counts of the model-visible request and result. W4 combines those counters with the disposable namespace tree to prove whether any unrelated state path was present or read.
+
 ## Credential boundary
 
 The GitHub token, when present, is read from the Pi process environment and passed only to the accepted stateOwl GitHub transports. It is not placed in tool arguments, tool results, durable handoff artifacts, or repository evidence.
