@@ -441,12 +441,12 @@ class GitHubReceiptProofTests(unittest.TestCase):
                     self.proof_cache[expected_sha] = super()._exact_commit_proof(value, expected_sha)
                 return self.proof_cache[expected_sha]
 
-            def resolve(self, value):
-                self._target(value)
+            def resolve(self, target):
+                self._target(target)
                 return self.head
 
-            def tree(self, value, snapshot):
-                self._target(value)
+            def tree(self, target, snapshot):
+                self._target(target)
                 return copy.deepcopy(self.trees[snapshot])
 
         storage = W6Storage()
