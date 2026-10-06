@@ -1,0 +1,29 @@
+{
+  "name": "@stateowl/openclaw-binding",
+  "version": "0.0.0-r4",
+  "private": true,
+  "type": "module",
+  "files": [
+    "dist",
+    "openclaw.plugin.json",
+    "README.md"
+  ],
+  "dependencies": {
+    "typebox": "*"
+  },
+  "peerDependencies": {
+    "openclaw": "*"
+  },
+  "devDependencies": {
+    "typescript": "*"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "node --experimental-strip-types --test test/*.test.ts"
+  },
+  "openclaw": {
+    "extensions": [
+      "./dist/index.js"
+    ]
+  }
+}
