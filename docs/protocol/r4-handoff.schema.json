@@ -1,0 +1,184 @@
+{
+  "$defs": {
+    "publicationContinuation": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "publication"
+        },
+        "prior_result": {
+          "type": "object"
+        },
+        "request": {
+          "type": "object"
+        },
+        "request_digest": {
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "request",
+        "request_digest",
+        "prior_result"
+      ],
+      "type": "object"
+    },
+    "record": {
+      "additionalProperties": false,
+      "properties": {
+        "format": {
+          "enum": [
+            "json",
+            "text",
+            "base64"
+          ]
+        },
+        "key": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "path": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "key",
+        "path",
+        "format"
+      ],
+      "type": "object"
+    },
+    "snapshot": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "type": "object"
+    },
+    "target": {
+      "additionalProperties": false,
+      "properties": {
+        "authority": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "kind": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "namespace": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "resource": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "authority",
+        "resource",
+        "namespace"
+      ],
+      "type": "object"
+    }
+  },
+  "$id": "https://stateowl.dev/schema/r4-handoff-1.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "at": {
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "current": {
+              "const": true
+            }
+          },
+          "required": [
+            "current"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "snapshot": {
+              "$ref": "#/$defs/snapshot"
+            }
+          },
+          "required": [
+            "snapshot"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "continuation": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "#/$defs/publicationContinuation"
+        }
+      ]
+    },
+    "format": {
+      "const": "stateowl.r4-handoff/1"
+    },
+    "profile": {
+      "additionalProperties": false,
+      "properties": {
+        "digest": {
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "id": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "digest"
+      ],
+      "type": "object"
+    },
+    "protocol": {
+      "const": "stateowl/0.2-draft.3"
+    },
+    "records": {
+      "items": {
+        "$ref": "#/$defs/record"
+      },
+      "minItems": 1,
+      "type": "array"
+    },
+    "target": {
+      "$ref": "#/$defs/target"
+    }
+  },
+  "required": [
+    "format",
+    "protocol",
+    "profile",
+    "target",
+    "at",
+    "records",
+    "continuation"
+  ],
+  "title": "stateowl.r4-handoff/1",
+  "type": "object"
+}
