@@ -42,6 +42,12 @@ export type Limits = {
   reconcile_commits: number;
   json_depth: number;
 };
+export type PublicationCapabilities = {
+  continuity: "single_step_required";
+  receipt_format: "stateowl.git-receipt/2";
+  receipt_retention: "reachable_history";
+  authority: "mechanical" | "project_validated";
+};
 export type Capabilities = {
   protocol: string;
   operations: string[];
@@ -49,6 +55,7 @@ export type Capabilities = {
   features: string[];
   resolvers: string[];
   limits: Limits;
+  publication?: PublicationCapabilities;
 };
 export type ProviderFile = {
   base64: string;

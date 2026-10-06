@@ -180,7 +180,7 @@ def harness_self_checks(suite):
     return count
 
 def main():
-    parser=argparse.ArgumentParser();parser.add_argument('--adapter',nargs=argparse.REMAINDER)
+    parser=argparse.ArgumentParser();parser.add_argument('--scenario',choices=('read','publish','observe'));parser.add_argument('--adapter',nargs=argparse.REMAINDER)
     args=parser.parse_args();packed=read_json(HERE/'fixtures.json');assets=packed.pop('assets',{});suite=expand_assets(packed,assets)
     Draft202012Validator.check_schema(SCHEMA)
     hs=read_json(HERE/'harness.schema.json');Draft202012Validator.check_schema(hs)
@@ -220,7 +220,9 @@ def main():
     for vec in suite['jcs_vectors']:require(jcs(vec['value']).decode()==vec['canonical'],'general JCS vector '+vec['id'])
     for vec in suite['git_blob_vectors']:require(git_blob(unbase64(vec['base64']),vec['algorithm'])==vec['object'],'Git blob vector')
     counts={};ids=set();adapter=AdapterSession(args.adapter) if args.adapter else None
-    for file in suite['scenario_files']:
+    scenario_files=suite['scenario_files'] if args.scenario is None else [args.scenario+'-cases.json']
+    require(set(scenario_files)<=set(suite['scenario_files']),'selected scenario missing from fixture manifest')
+    for file in scenario_files:
         cases=expand_assets(read_json(HERE/file),assets)
         for case in cases:
             require(case['id'] not in ids,'duplicate scenario ID');ids.add(case['id'])

@@ -1,0 +1,83 @@
+{
+  "candidate_oid": "30fded3c53b0927c1888ecc6af017deb75589297",
+  "tree_sha": "f3197cf071126fb33a8b9807b2f99999478ed979",
+  "parent_oid": "c965c47aa7d234cbe08c77d0c533859b65ec0895",
+  "author": {
+    "name": "AL",
+    "email": "3002130+repla73@users.noreply.github.com",
+    "api_date": "2026-10-05T16:56:45Z",
+    "raw_timezone": "+0300"
+  },
+  "committer": {
+    "name": "AL",
+    "email": "3002130+repla73@users.noreply.github.com",
+    "api_date": "2026-10-05T16:56:45Z",
+    "raw_timezone": "+0300"
+  },
+  "api_message": "stateOwl publication\n\nStateOwl-Receipt: eyJjaGFuZ2VzIjpbeyJkZWxldGUiOnRydWUsInBhdGgiOiJzdGF0ZS9vYnNvbGV0ZS50eHQifSx7InBhdGgiOiJzdGF0ZS9weXRob24tbmV3LnR4dCIsInB1dCI6eyJieXRlcyI6NywiZGlnZXN0Ijoic2hhMjU2OjI3ZWNmNGE2ODM1Y2IyZmRmNTIwNzA3OGQ3N2ZiZTg4ZTYzYzJlODFjMTJhMjRjNzdiMjZjNzVmNzY5YmEyNDIifX0seyJwYXRoIjoic3RhdGUvc2NyaXB0IiwicHV0Ijp7ImJ5dGVzIjoyMiwiZGlnZXN0Ijoic2hhMjU2OmQwZTE2MTIwYzEyM2Y2ZTViNDE3Zjg2ZDdjYzAxMTdkMGIyMDI5ZjMzMWE2MGE5ZGNjNzczMDlkN2VkMzdkMDIifX0seyJwYXRoIjoic3RhdGUvd29yay5qc29uIiwicHV0Ijp7ImJ5dGVzIjoxMCwiZGlnZXN0Ijoic2hhMjU2OmMzMjE2NzNiZjRhMWIxN2I1NGFhNGJmOWU2MmVmNjdmZWNjOWE1M2ZmMGNlMWNkMTlhNmY1YjcxNmMwYzg5NjcifX1dLCJleHBlY3RlZCI6eyJpZCI6ImdpdDpzaGExOmM5NjVjNDdhYTdkMjM0Y2JlMDhjNzdkMGM1MzM4NTliNjVlYzA4OTUifSwicHJvdG9jb2wiOiJzdGF0ZW93bC8wLjItZHJhZnQuMyIsInRhcmdldCI6eyJhdXRob3JpdHkiOiJnaXRodWIuY29tIiwia2luZCI6ImdpdCIsIm5hbWVzcGFjZSI6InJlZnMvaGVhZHMvc3RhdGVvd2wtcjMtcXVhbGlmaWNhdGlvbiIsInJlc291cmNlIjoicmVwbGE3My9zdGF0ZW93bC1yMy1xdWFsaWZpY2F0aW9uIn0sInZhbGlkYXRpb24iOiJ1cm46c3RhdGVvd2w6cXVhbGlmaWNhdGlvbjpyMy12YWxpZGF0aW9uOjEifQ==",
+  "raw_message": "stateOwl publication\n\nStateOwl-Receipt: eyJjaGFuZ2VzIjpbeyJkZWxldGUiOnRydWUsInBhdGgiOiJzdGF0ZS9vYnNvbGV0ZS50eHQifSx7InBhdGgiOiJzdGF0ZS9weXRob24tbmV3LnR4dCIsInB1dCI6eyJieXRlcyI6NywiZGlnZXN0Ijoic2hhMjU2OjI3ZWNmNGE2ODM1Y2IyZmRmNTIwNzA3OGQ3N2ZiZTg4ZTYzYzJlODFjMTJhMjRjNzdiMjZjNzVmNzY5YmEyNDIifX0seyJwYXRoIjoic3RhdGUvc2NyaXB0IiwicHV0Ijp7ImJ5dGVzIjoyMiwiZGlnZXN0Ijoic2hhMjU2OmQwZTE2MTIwYzEyM2Y2ZTViNDE3Zjg2ZDdjYzAxMTdkMGIyMDI5ZjMzMWE2MGE5ZGNjNzczMDlkN2VkMzdkMDIifX0seyJwYXRoIjoic3RhdGUvd29yay5qc29uIiwicHV0Ijp7ImJ5dGVzIjoxMCwiZGlnZXN0Ijoic2hhMjU2OmMzMjE2NzNiZjRhMWIxN2I1NGFhNGJmOWU2MmVmNjdmZWNjOWE1M2ZmMGNlMWNkMTlhNmY1YjcxNmMwYzg5NjcifX1dLCJleHBlY3RlZCI6eyJpZCI6ImdpdDpzaGExOmM5NjVjNDdhYTdkMjM0Y2JlMDhjNzdkMGM1MzM4NTliNjVlYzA4OTUifSwicHJvdG9jb2wiOiJzdGF0ZW93bC8wLjItZHJhZnQuMyIsInRhcmdldCI6eyJhdXRob3JpdHkiOiJnaXRodWIuY29tIiwia2luZCI6ImdpdCIsIm5hbWVzcGFjZSI6InJlZnMvaGVhZHMvc3RhdGVvd2wtcjMtcXVhbGlmaWNhdGlvbiIsInJlc291cmNlIjoicmVwbGE3My9zdGF0ZW93bC1yMy1xdWFsaWZpY2F0aW9uIn0sInZhbGlkYXRpb24iOiJ1cm46c3RhdGVvd2w6cXVhbGlmaWNhdGlvbjpyMy12YWxpZGF0aW9uOjEifQ==\n",
+  "request": {
+    "protocol": "stateowl/0.2-draft.3",
+    "op": "publish",
+    "target": {
+      "kind": "git",
+      "authority": "github.com",
+      "resource": "repla73/stateowl-r3-qualification",
+      "namespace": "refs/heads/stateowl-r3-qualification"
+    },
+    "expected": {
+      "id": "git:sha1:c965c47aa7d234cbe08c77d0c533859b65ec0895"
+    },
+    "mode": "reconcile",
+    "validation": "urn:stateowl:qualification:r3-validation:1",
+    "changes": [
+      {
+        "path": "state/work.json",
+        "put": {
+          "encoding": "base64",
+          "data": "eyJ2IjoiQiJ9Cg=="
+        }
+      },
+      {
+        "path": "state/script",
+        "put": {
+          "encoding": "base64",
+          "data": "IyEvYmluL3NoCmVjaG8gcHl0aG9uCg=="
+        }
+      },
+      {
+        "path": "state/python-new.txt",
+        "put": {
+          "encoding": "base64",
+          "data": "cHl0aG9uCg=="
+        }
+      },
+      {
+        "path": "state/obsolete.txt",
+        "delete": true
+      }
+    ]
+  },
+  "base_state": {
+    "state/work.json": {
+      "base64": "eyJ2IjoiQSJ9Cg==",
+      "mode": "100644"
+    },
+    "state/obsolete.txt": {
+      "base64": "b2xkCg==",
+      "mode": "100644"
+    },
+    "state/script": {
+      "base64": "IyEvYmluL3NoCmV4aXQgMAo=",
+      "mode": "100755"
+    },
+    "state/untouched.txt": {
+      "base64": "a2VlcAo=",
+      "mode": "100644"
+    },
+    "state/validation.json": {
+      "base64": "eyJlbmFibGVkIjp0cnVlfQo=",
+      "mode": "100644"
+    }
+  }
+}
