@@ -1,6 +1,6 @@
 # R3 Integration Candidate
 
-Status: assembled integration candidate only. R3 is not complete or adopted.
+Status: R3 implementation and qualification evidence is complete. R3 is not yet adopted.
 
 ## Subjects
 
@@ -11,29 +11,34 @@ Status: assembled integration candidate only. R3 is not complete or adopted.
 - Accepted TypeScript publisher: `195568d33a0b7acb36851803619bca6ce5acdb18`
 - Integration branch: `r3/integration`
 
-The Python and TypeScript R3 implementation/test path sets were materialized from the accepted subjects without rewriting accepted implementation bytes. W1 shared contract/tooling remains based on the exact contract subject. R2 behavior is preserved except for changes already present in the accepted R3 candidate diffs.
+The Python and TypeScript R3 implementation/test path sets are byte-identical to the accepted subjects. W1 shared contract/tooling remains exact. Unrelated R2 source remains unchanged.
 
 ## Deterministic evidence
 
 Python:
 
-- R3 deterministic tests: 30/30
+- R3 deterministic: 43/43
 - publication conformance: 89/89
 - R2 regression: 24/24
 
 TypeScript:
 
-- deterministic tests: 62/62
+- deterministic: 72/72
 - publication conformance: 89/89
 - R2 read conformance: 90/90
 
-Cross-language publication semantic equivalence: PASS.
+Cross-language:
+
+- publication semantic equivalence: PASS
+- frozen live-payload receipt proof: PASS
 
 ## Independent audit
 
 `R3_W3_ROUND2: PASS`
 
 F01-F03 corrections were accepted with no remaining blocking or non-blocking findings.
+
+The live-GitHub receipt-proof provider corrections were also independently audited: PASS.
 
 ## W4 real local-Git evidence
 
@@ -48,31 +53,78 @@ F01-F03 corrections were accepted with no remaining blocking or non-blocking fin
 - mode preservation: PASS
 - ordinary worktree isolation: PASS
 
-Evidence boundary: W4 executed against real local Git. It is not live GitHub qualification. No local machine paths or raw execution logs are canonicalized here.
+Evidence boundary: W4 executed against real local Git. No local machine paths or raw execution logs are canonicalized here.
 
-## W6 receipt-proof correction
+## W6 live GitHub qualification
 
-The initial W6 Transition 1 stopped before guarded ref admission. Candidate `30fded3c53b0927c1888ecc6af017deb75589297` was created as an unadmitted object only; GraphQL ref calls were 0 and accepted transitions remain 0/4.
+Result: PASS.
 
-Live evidence showed the raw Git receipt bytes were correct, including the required terminal LF. GitHub's JSON commit representation omitted that terminal LF from `message` and normalized actor timestamps to UTC, while the raw Git actor offsets were `+0300`. This was a provider representation compatibility defect, not a protocol defect or an unsafe publication.
+Disposable repository: `repla73/stateowl-r3-qualification`
 
-The corrected Python and TypeScript provider subjects above were independently audited: PASS. The normalized GitHub message/time representation is not used as raw proof; exact full commit OID reconstruction supplies the proof. The terminal-LF protocol rule remains unchanged, malformed raw receipts remain rejected, reconciliation uses the same proof, and no Git CLI/runtime dependency was introduced.
+Namespace: `refs/heads/stateowl-r3-qualification`
 
-Correction qualification:
+Accepted chain:
 
-- Python R3 deterministic: 43/43
-- Python publication black-box: 89/89 applicable
-- Python R2 regression: 24/24 applicable
-- Python exact frozen W6 replay: PASS
-- Python hypothetical reconciliation replay: PASS
-- TypeScript deterministic: 72/72
-- TypeScript publication black-box: 89/89
-- TypeScript R2 read conformance: 90/90
-- TypeScript exact frozen W6 replay: PASS
-- Cross-language frozen W6 receipt proof: PASS
+- A baseline: `c965c47aa7d234cbe08c77d0c533859b65ec0895`
+- B: `16a29935ee2ea2342c91faba5e37bc4c70932d94` — Python normal guarded publication
+- C: `80a7dfb8d2037cb3f6cc1bd7f2df74a1186c2e40` — TypeScript caller-visible success discarded, recovered through zero-admission reconciliation
+- D: `a7650e156e4bbfff6b1a6a5891845ab2d518b3b2` — divergent Python/TypeScript race from C; Python won, exactly one guarded mutation succeeded, loser returned conflict
+- E: `20935945e5d85fc73adec7ca800509759c2d509d` — identical Python/TypeScript race from D; TypeScript won the guarded mutation, both implementations resolved E, exactly one admission occurred
 
-Disposable W6 baseline A remains `git:sha1:c965c47aa7d234cbe08c77d0c533859b65ec0895`. It is still current. The failed initial attempt is not an accepted transition. W6 must resume from baseline A.
+Accepted transitions: 4/4. E is the final qualification head.
 
-## Remaining gate
+W6 verified:
 
-W6 disposable live-GitHub qualification remains required and must resume from baseline A. R3 remains incomplete until live W6 passes. Final R3 audit and main adoption remain required afterward.
+- baseline freshly verified: PASS
+- Python A→B: PASS
+- TypeScript B→C lost-response reconciliation: PASS
+- divergent cross-language race: PASS
+- identical cross-language race: PASS
+- later-successor reconciliation: PASS
+- four accepted transitions exactly: PASS
+- every admitted commit has exactly one parent: PASS
+- exact expected-old guarded publication: PASS
+- stale writer does not mutate: PASS
+- complete tree preservation: PASS
+- truncated tree not accepted: PASS
+- `100755` preservation: PASS
+- new files `100644`: PASS
+- returned commit identities: PASS
+- zero-admission reconciliation where required: PASS
+
+Successor reconciliation after E used committed snapshot D with observed head E and performed zero admissions.
+
+## Live receipt behavior
+
+For all four admitted receipts, GitHub's JSON commit `message` omitted the terminal LF. The raw Git commit objects preserved the exact required receipt bytes.
+
+Both corrected providers accept the normalized API representation only because the complete raw commit OID uniquely proves the exact receipt bytes and raw actor-timezone reconstruction.
+
+- raw terminal LF preserved: PASS
+- Python live verification: PASS
+- TypeScript live verification: PASS
+- malformed raw-receipt rejection rules: unchanged
+- blind LF reconstruction: no
+- blind timezone acceptance: no
+- exact full commit OID used as proof: yes
+
+GitHub JSON `message` is not treated as byte-exact receipt evidence.
+
+## Governance / G5 evidence boundary
+
+Executed W6 proof established that the four stateOwl transitions themselves:
+
+- used exact expected-old guarded admission;
+- each admitted one sole-parent commit;
+- did not force, merge, reset, or overwrite stale state.
+
+Repository-wide exclusive single-step writer confinement remained a trusted qualification-environment assumption. It was not inferred from Git history and is not claimed as a general GitHub repository guarantee.
+
+## Status
+
+- W6 live GitHub qualification: PASS
+- R3 implementation/qualification evidence complete: yes
+- final independent R3 audit required: yes
+- clean main adoption required: yes
+- R3 adopted: no
+- R4 started: no
