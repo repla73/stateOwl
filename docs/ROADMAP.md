@@ -65,15 +65,15 @@ R0–R3 are complete, with R2 and R3 adopted on `main`. R4 is the next stage; R5
 
 **Purpose.** Show that the contract survives materially different execution environments.
 
-**Deliverable.** One native/local binding and one hosted binding, with installation/authentication/capability receipts. Prefer Pi or OpenClaw for the independent native TypeScript path, and ChatGPT or Claude for the hosted path. Preserve an assisted native-repository recipe as a separate, accurately labeled option.
+**Deliverable.** Two materially different execution-plane bindings with installation/authentication/capability receipts. At least one binding must be native/local; a hosted binding is optional compatibility work and is not required for R4 acceptance. The founder-selected R4 qualification pair is Pi and OpenClaw, both using the accepted TypeScript stateOwl implementation directly rather than reimplementing protocol semantics. Hosted ChatGPT, Claude, Gemini, Grok or other integrations may be qualified later without reopening accepted R4 continuity evidence.
 
 **Dependency.** R2 for reader qualification; R3 before any binding claims writes.
 
-**Proof.** A worker reads a bounded task and leaves an exact publication. A different plane resumes from the locator and required records without the original conversation. Verify source identities, profile version, relevant work and an interrupted-operation receipt. Measure the actual model-visible tool chain.
+**Proof.** A worker reads a bounded task and leaves an exact publication. A materially different execution plane resumes from the locator and required records without the original conversation. Verify source identities, profile version, relevant work and an interrupted-operation receipt. Measure the actual model-visible tool chain.
 
-**Acceptance.** No session transcript is the operational authority. A skill-only recipe is not mislabeled a single executable tool. A hosted tool does not assume access to another connector's token. Native and hosted bindings preserve identical outcome semantics.
+**Acceptance.** No session transcript is the operational authority. Both qualified bindings preserve identical observable read/publish and recovery semantics, authenticate independently, and consume the same exact R4 handoff/profile contract. R4 acceptance does not depend on access to a commercial hosted-plane subscription.
 
-**Boundary.** A remote MCP adapter is permitted only after its need, hosting, authentication and exact authorized scope are decided. A web plugin installation is not permission to deploy scripts, tunnels or services. Additional Claude/Gemini/Antigravity/Grok API paths reuse the qualified transport where possible.
+**Boundary.** A remote MCP or hosted adapter is optional and permitted only after its need, hosting, authentication and exact authorized scope are decided. It is not required to complete R4. Hosted compatibility qualification may be deferred until after the core roadmap is complete.
 
 ## R5 — Prove automation and recovery
 
