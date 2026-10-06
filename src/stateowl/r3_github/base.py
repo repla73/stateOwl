@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import datetime
 import base64
 import hashlib
 import json
@@ -11,12 +12,20 @@ from ..r3_publish import PublicationFault
 from .transport import GitHubTransport, UrllibGitHubTransport
 
 _TYPED = re.compile(r"git:(sha1):([0-9a-f]{40})\Z|git:(sha256):([0-9a-f]{64})\Z")
+_RECEIPT_MARKER = "StateOwl-Receipt:"
+_GIT_TIMEZONE_HYPOTHESES = tuple(
+    (zone, zone.encode("ascii"))
+    for sign in ("+", "-")
+    for hour in range(24)
+    for minute in range(60)
+    for zone in (f"{sign}{hour:02d}{minute:02d}",)
+)
 
 class GitHubBase:
     """GitHub Git-database publisher with atomic expected-old ref admission.
 
     Blobs, tree and one-parent commit are constructed with Git database REST
-    APIs. Admission uses GraphQL `updateRefs` with `beforeOid` and `afterOid`.
+    APIs. Admission uses GraphQL \`updateRefs\` with \`beforeOid\` and \`afterOid\`.
     This supplies the per-write expected-old CAS only; it does not claim G5
     repository-wide single-step policy enforcement.
     """
@@ -83,6 +92,169 @@ class GitHubBase:
         if match is None:
             raise PublicationFault("INVALID_SOURCE")
         return match.group(2) or match.group(4)
+
+    @staticmethod
+    def _git_object_hash(kind: str, raw: bytes, algorithm: str) -> str:
+        header = kind.encode("ascii") + b" " + str(len(raw)).encode("ascii") + b"\0"
+        return hashlib.new(algorithm, header + raw).hexdigest()
+
+    @staticmethod
+    def _git_actor_prefix(actor: Any) -> str:
+        if not isinstance(actor, Mapping):
+            raise PublicationFault("INTEGRITY_MISMATCH")
+        name = actor.get("name")
+        email = actor.get("email")
+        date = actor.get("date")
+        if not all(isinstance(value, str) and value for value in (name, email, date)):
+            raise PublicationFault("INTEGRITY_MISMATCH")
+        if any(char in name or char in email for char in ("\n", "\r", "<", ">")):
+            raise PublicationFault("INTEGRITY_MISMATCH")
+        try:
+            instant = datetime.fromisoformat(date.replace("Z", "+00:00"))
+            timestamp = instant.timestamp()
+            if instant.tzinfo is None or instant.utcoffset() is None or timestamp != int(timestamp):
+                raise ValueError
+        except (ValueError, OverflowError, OSError):
+            raise PublicationFault("INTEGRITY_MISMATCH") from None
+        return f"{name} <{email}> {int(timestamp)}"
+
+    @staticmethod
+    def _git_timezone_hypotheses() -> tuple[tuple[str, bytes], ...]:
+        # Git's signed HHMM timezone form accepts hour 00-23 and minute 00-59.
+        # The JSON-rendered offset is deliberately not privileged here.
+        return _GIT_TIMEZONE_HYPOTHESES
+
+    def _raw_commit_parts(self, payload: Mapping[str, Any]) -> tuple[bytes, bytes]:
+        try:
+            tree_sha = payload["tree"]["sha"]
+            parents = payload["parents"]
+            if not isinstance(tree_sha, str) or not isinstance(parents, list):
+                raise PublicationFault("INTEGRITY_MISMATCH")
+            self._typed(tree_sha)
+            parent_shas: list[str] = []
+            for parent in parents:
+                parent_sha = parent["sha"]
+                self._typed(parent_sha)
+                parent_shas.append(parent_sha)
+            author = self._git_actor_prefix(payload["author"])
+            committer = self._git_actor_prefix(payload["committer"])
+            prefix = (
+                f"tree {tree_sha}\n"
+                + "".join(f"parent {parent_sha}\n" for parent_sha in parent_shas)
+                + f"author {author} "
+            ).encode("utf-8")
+            middle = f"\ncommitter {committer} ".encode("utf-8")
+            return prefix, middle
+        except (KeyError, TypeError, UnicodeError):
+            raise PublicationFault("INTEGRITY_MISMATCH") from None
+
+    def _raw_commit_bytes(
+        self,
+        payload: Mapping[str, Any],
+        message: str,
+        author_timezone: str,
+        committer_timezone: str,
+    ) -> bytes:
+        prefix, middle = self._raw_commit_parts(payload)
+        if (
+            not re.fullmatch(r"[+-][0-9]{4}", author_timezone)
+            or not re.fullmatch(r"[+-][0-9]{4}", committer_timezone)
+        ):
+            raise PublicationFault("INTEGRITY_MISMATCH")
+        for timezone in (author_timezone, committer_timezone):
+            hour = int(timezone[1:3])
+            minute = int(timezone[3:5])
+            if hour >= 24 or minute >= 60:
+                raise PublicationFault("INTEGRITY_MISMATCH")
+        try:
+            return (
+                prefix
+                + author_timezone.encode("ascii")
+                + middle
+                + committer_timezone.encode("ascii")
+                + b"\n\n"
+                + message.encode("utf-8")
+            )
+        except UnicodeError:
+            raise PublicationFault("INTEGRITY_MISMATCH") from None
+
+    def _exact_commit_proof(
+        self,
+        payload: Mapping[str, Any],
+        expected_sha: str,
+    ) -> tuple[str, str, str]:
+        """Prove exact receipt bytes and actor zones from the complete commit OID."""
+
+        message = payload.get("message") if isinstance(payload, Mapping) else None
+        if not isinstance(message, str):
+            raise PublicationFault("INVALID_SOURCE")
+        if _RECEIPT_MARKER not in message:
+            raise PublicationFault("INVALID_SOURCE")
+        if payload.get("sha") != expected_sha:
+            raise PublicationFault("INTEGRITY_MISMATCH")
+
+        verification = payload.get("verification")
+        if (
+            not isinstance(verification, Mapping)
+            or verification.get("reason") != "unsigned"
+            or verification.get("signature") is not None
+            or verification.get("payload") is not None
+        ):
+            raise PublicationFault("INTEGRITY_MISMATCH")
+
+        if re.fullmatch(r"[0-9a-f]{40}", expected_sha):
+            algorithm = "sha1"
+        elif re.fullmatch(r"[0-9a-f]{64}", expected_sha):
+            algorithm = "sha256"
+        else:
+            raise PublicationFault("INTEGRITY_MISMATCH")
+
+        prefix, middle = self._raw_commit_parts(payload)
+        hypotheses = self._git_timezone_hypotheses()
+        if not hypotheses:
+            raise PublicationFault("INTEGRITY_MISMATCH")
+
+        message_hypotheses = [message]
+        if not message.endswith("\n"):
+            message_hypotheses.append(message + "\n")
+
+        expected_digest = bytes.fromhex(expected_sha)
+        match: tuple[str, str, str] | None = None
+        for candidate_message in message_hypotheses:
+            try:
+                suffix = b"\n\n" + candidate_message.encode("utf-8")
+            except UnicodeError:
+                raise PublicationFault("INTEGRITY_MISMATCH") from None
+            body_length = len(prefix) + 5 + len(middle) + 5 + len(suffix)
+            root = hashlib.new(algorithm)
+            root.update(b"commit " + str(body_length).encode("ascii") + b"\0")
+            root.update(prefix)
+            for author_zone, author_zone_bytes in hypotheses:
+                author_hash = root.copy()
+                author_hash.update(author_zone_bytes)
+                author_hash.update(middle)
+                for committer_zone, committer_zone_bytes in hypotheses:
+                    commit_hash = author_hash.copy()
+                    commit_hash.update(committer_zone_bytes)
+                    commit_hash.update(suffix)
+                    if commit_hash.digest() == expected_digest:
+                        found = (candidate_message, author_zone, committer_zone)
+                        if match is not None:
+                            raise PublicationFault("INTEGRITY_MISMATCH")
+                        match = found
+        if match is None:
+            raise PublicationFault("INTEGRITY_MISMATCH")
+        return match
+
+    def _exact_commit_message(self, payload: Mapping[str, Any], expected_sha: str) -> str:
+        """Return an exact receipt message only when the full commit OID proves it."""
+
+        message = payload.get("message") if isinstance(payload, Mapping) else None
+        if not isinstance(message, str):
+            raise PublicationFault("INVALID_SOURCE")
+        if _RECEIPT_MARKER not in message:
+            return message
+        return self._exact_commit_proof(payload, expected_sha)[0]
 
     def _url(self, suffix: str) -> str:
         owner = urlparse.quote(self.owner, safe="")

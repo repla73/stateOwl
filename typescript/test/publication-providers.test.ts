@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -30,11 +31,12 @@ test("Local-Git publisher builds objects without checking out or mutating the st
 });
 
 test("GitHub publisher prebuilds exact objects then admits with updateRefs beforeOid CAS",async()=>{
- const expectedRaw="a".repeat(40),candidateRaw="b".repeat(40),treeSha="c".repeat(40),blobSha="d".repeat(40),target:Target={kind:"git",authority:"github.com",resource:"fixture/project",namespace:"refs/heads/state"};
+ const expectedRaw="a".repeat(40),treeSha="c".repeat(40),blobSha="d".repeat(40),target:Target={kind:"git",authority:"github.com",resource:"fixture/project",namespace:"refs/heads/state"};
  const candidate:PublicationTree={"state/a":{base64:Buffer.from("a\n").toString("base64"),mode:"100644"},"state/run":{base64:Buffer.from("x\n").toString("base64"),mode:"100755"}};
- const posts:Array<{path:string;body:any}>=[];let graphVars:any;const message="stateOwl publication\n\nStateOwl-Receipt: e30=\n";
+ const posts:Array<{path:string;body:any}>=[];let graphVars:any;const message="stateOwl publication\n\nStateOwl-Receipt: e30=\n",who={name:"stateOwl test",email:"stateowl@example.invalid",date:"2026-10-06T00:00:00Z"},seconds=Math.trunc(Date.parse(who.date)/1000);
+ const raw=Buffer.from(`tree ${treeSha}\nparent ${expectedRaw}\nauthor ${who.name} <${who.email}> ${seconds} +0000\ncommitter ${who.name} <${who.email}> ${seconds} +0000\n\n${message}`,"utf8"),hash=createHash("sha1");hash.update(`commit ${raw.byteLength}\0`);hash.update(raw);const candidateRaw=hash.digest("hex");
  const rest=async(method:"GET"|"POST",path:string,body?:any)=>{if(method==="POST"){posts.push({path,body});if(path.endsWith("/git/blobs"))return {sha:blobSha};if(path.endsWith("/git/trees"))return {sha:treeSha};if(path.endsWith("/git/commits"))return {sha:candidateRaw};}
-   if(path===`/repos/fixture/project/git/commits/${candidateRaw}`)return {sha:candidateRaw,message,tree:{sha:treeSha},parents:[{sha:expectedRaw}]};if(path==="/repos/fixture/project")return {node_id:"R_repo"};if(path.includes("/git/ref/heads%2Fstate"))return {object:{sha:expectedRaw}};throw Object.assign(new Error(path),{status:404});};
+   if(path===`/repos/fixture/project/git/commits/${candidateRaw}`)return {sha:candidateRaw,message:message.slice(0,-1),tree:{sha:treeSha},parents:[{sha:expectedRaw}],author:who,committer:who,verification:{verified:false,reason:"unsigned",signature:null,payload:null,verified_at:null}};if(path==="/repos/fixture/project")return {node_id:"R_repo"};if(path.includes("/git/ref/heads%2Fstate"))return {object:{sha:expectedRaw}};throw Object.assign(new Error(path),{status:404});};
  const graphql=async(_query:string,variables:any)=>{graphVars=variables;return {data:{updateRefs:{clientMutationId:null}}};};
  const provider=new GitHubPublicationProvider(rest,graphql,new Set(["fixture/project"]));const ack=await provider.admit(target,`git:sha1:${expectedRaw}`,candidate,message);assert.deepEqual(ack,{status:"admitted",snapshot:`git:sha1:${candidateRaw}`});
  const treePost=posts.find(x=>x.path.endsWith("/git/trees"))!;assert.equal(treePost.body.tree.length,2);assert.deepEqual(posts.find(x=>x.path.endsWith("/git/commits"))!.body,{message,tree:treeSha,parents:[expectedRaw]});

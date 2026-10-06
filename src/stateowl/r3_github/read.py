@@ -16,9 +16,9 @@ class GitHubReadMixin:
                 sha = payload["sha"]
                 tree_sha = payload["tree"]["sha"]
                 parents = payload["parents"]
-                message = payload["message"]
-                if sha != raw or not isinstance(message, str) or not isinstance(parents, list):
+                if sha != raw or not isinstance(parents, list):
                     raise PublicationFault("INTEGRITY_MISMATCH")
+                message = self._exact_commit_message(payload, sha)
                 return {
                     "id": self._typed(sha),
                     "type": "commit",
