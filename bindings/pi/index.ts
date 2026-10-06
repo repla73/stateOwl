@@ -130,11 +130,26 @@ function capabilities(protocol: string, publishEnabled: boolean): Capabilities {
   };
 }
 
-function toolResult(result: unknown) {
+type CallEvidence = {
+  provider_operations: number;
+  requested_state_paths: string[];
+  model_visible_request_bytes: number;
+  model_visible_result_bytes: number;
+};
+
+function toolResult(result: unknown, request: unknown, evidence: Omit<CallEvidence, "model_visible_request_bytes" | "model_visible_result_bytes">) {
   const text = JSON.stringify(result);
+  const modelRequest = JSON.stringify({ request });
   return {
     content: [{ type: "text" as const, text }],
-    details: { stateowl: result },
+    details: {
+      stateowl: result,
+      evidence: {
+        ...evidence,
+        model_visible_request_bytes: Buffer.byteLength(modelRequest, "utf8"),
+        model_visible_result_bytes: Buffer.byteLength(text, "utf8"),
+      } satisfies CallEvidence,
+    },
   };
 }
 
@@ -163,13 +178,32 @@ export default async function stateOwlPiExtension(pi: ExtensionAPI) {
       openWorldHint: true,
     },
     async execute(_toolCallId, params) {
+      let providerOperations = 0;
+      const requestedStatePaths = new Set<string>();
+      const baseTransport = stateowl.githubFetchTransport(config.token);
       const baseProvider = new stateowl.GitHubReadProvider(
-        stateowl.githubFetchTransport(config.token),
+        async (path: string) => {
+          providerOperations += 1;
+          return baseTransport(path);
+        },
         allowed,
       );
-      const provider = new ExactTargetReadProvider(baseProvider, config.target, () => { throw new stateowl.ProtocolError("FORBIDDEN"); });
+      const scoped = new ExactTargetReadProvider(baseProvider, config.target, () => { throw new stateowl.ProtocolError("FORBIDDEN"); });
+      const provider: ReadProvider = {
+        access: (target, operation) => scoped.access(target, operation),
+        resolve: (target) => scoped.resolve(target),
+        inspect: (target, snapshot) => scoped.inspect(target, snapshot),
+        file: (target, snapshot, path) => {
+          requestedStatePaths.add(path);
+          return scoped.file(target, snapshot, path);
+        },
+      };
       const reader = new stateowl.Reader(provider, caps);
-      return toolResult(await reader.read(params.request));
+      const result = await reader.read(params.request);
+      return toolResult(result, params.request, {
+        provider_operations: providerOperations,
+        requested_state_paths: [...requestedStatePaths],
+      });
     },
   });
 
@@ -188,10 +222,17 @@ export default async function stateOwlPiExtension(pi: ExtensionAPI) {
       openWorldHint: true,
     },
     async execute(_toolCallId, params) {
+      let providerOperations = 0;
       const transports = stateowl.githubPublicationFetchTransports(config.token);
       const provider = new stateowl.GitHubPublicationProvider(
-        transports.rest,
-        transports.graphql,
+        async (method, path, body) => {
+          providerOperations += 1;
+          return transports.rest(method, path, body);
+        },
+        async (query, variables) => {
+          providerOperations += 1;
+          return transports.graphql(query, variables);
+        },
         allowed,
       );
       const validation = new stateowl.TrustedProjectValidationBoundary({
@@ -203,7 +244,19 @@ export default async function stateOwlPiExtension(pi: ExtensionAPI) {
         authorizePath: (path: string) => config.writePaths.has(path),
       });
       const publisher = new stateowl.Publisher(provider, validation, caps);
-      return toolResult(await publisher.publish(params.request));
+      const result = await publisher.publish(params.request);
+      const requestedStatePaths =
+        params.request &&
+        typeof params.request === "object" &&
+        Array.isArray((params.request as { changes?: unknown }).changes)
+          ? (params.request as { changes: Array<{ path?: unknown }> }).changes
+              .map((change) => change?.path)
+              .filter((path): path is string => typeof path === "string")
+          : [];
+      return toolResult(result, params.request, {
+        provider_operations: providerOperations,
+        requested_state_paths: requestedStatePaths,
+      });
     },
   });
 }
