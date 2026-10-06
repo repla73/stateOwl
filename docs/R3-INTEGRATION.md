@@ -1,6 +1,6 @@
 # R3 Integration Candidate
 
-Status: R3 implementation and qualification evidence is complete. R3 is not yet adopted.
+Status: R3 final independent audit passed. Accepted R3 subject/tree were cleanly adopted on `main` by commit `4c3ed20e83f29cbd7bfec8e1376146c6a7ef5793`. R4 has not started.
 
 ## Subjects
 
@@ -10,6 +10,9 @@ Status: R3 implementation and qualification evidence is complete. R3 is not yet 
 - Accepted Python publisher: `4239e6b75a4e92fc69235c7614285545ea922511`
 - Accepted TypeScript publisher: `195568d33a0b7acb36851803619bca6ce5acdb18`
 - Integration branch: `r3/integration`
+- Accepted R3 subject: `6d7e8fb5d46f0c7ac40d03a2c273a29e6f5dbe7e`
+- Accepted R3 tree: `0351aa0b324ecae3fcf4c57448ede90476d04478`
+- Clean main adoption commit: `4c3ed20e83f29cbd7bfec8e1376146c6a7ef5793`
 
 The Python and TypeScript R3 implementation/test path sets are byte-identical to the accepted subjects. W1 shared contract/tooling remains exact. Unrelated R2 source remains unchanged.
 
@@ -39,6 +42,8 @@ Cross-language:
 F01-F03 corrections were accepted with no remaining blocking or non-blocking findings.
 
 The live-GitHub receipt-proof provider corrections were also independently audited: PASS.
+
+Final independent acceptance audit: `R3_FINAL: PASS`.
 
 ## W4 real local-Git evidence
 
@@ -124,7 +129,9 @@ Repository-wide exclusive single-step writer confinement remained a trusted qual
 
 - W6 live GitHub qualification: PASS
 - R3 implementation/qualification evidence complete: yes
-- final independent R3 audit required: yes
-- clean main adoption required: yes
-- R3 adopted: no
+- final independent R3 audit: `R3_FINAL: PASS`
+- accepted R3 subject: `6d7e8fb5d46f0c7ac40d03a2c273a29e6f5dbe7e`
+- accepted R3 tree: `0351aa0b324ecae3fcf4c57448ede90476d04478`
+- clean main adoption commit: `4c3ed20e83f29cbd7bfec8e1376146c6a7ef5793`
+- R3 adopted on `main`: yes
 - R4 started: no

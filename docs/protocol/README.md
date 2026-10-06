@@ -1,8 +1,8 @@
 # Protocol and conformance — draft 3
 
 **Protocol:** `stateowl/0.2-draft.3`  
-**Status:** Draft; R1 independent audit passed; R2 read interoperability qualified and adopted. Not a stable release.  
-**Scope:** R1 protocol/conformance accepted; R2 read implementations complete and adopted. Write/publication provider qualification remains R3 and has not started.
+**Status:** Draft; R1 protocol accepted; R2 read interoperability qualified and adopted; R3 guarded publication qualified and adopted. Not a stable release.  
+**Scope:** R1 protocol/conformance accepted; R2 read interoperability adopted; R3 local-Git and GitHub guarded publication qualified and adopted. R4 hosted/native cross-plane continuity is next.
 
 ## Contract
 
@@ -45,4 +45,4 @@ The corrected corpus retains the original 162 scenarios with version/identity up
 
 ## Boundary
 
-The protocol remains a draft. R1 independent audit passed, and R2 read implementations passed interoperability qualification and were adopted. The Charter, package version, protocol semantics, original tests and legacy goldens remain unchanged by this status sync. Write/publication provider qualification remains R3; hosted-plane continuity and automation remain later gates.
+The protocol remains `stateowl/0.2-draft.3` and is not a stable release. R1 protocol/conformance is accepted; R2 read interoperability is adopted; R3 local-Git and GitHub guarded publication is qualified and adopted. The Charter, package version, protocol semantics, original tests and legacy goldens remain unchanged by this status sync. R4 hosted/native cross-plane continuity is next; automation remains a later gate.

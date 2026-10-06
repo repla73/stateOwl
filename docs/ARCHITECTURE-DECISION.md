@@ -1,7 +1,7 @@
 # stateOwl — Architecture decision and R&D package
 
 **Date:** 3 October 2026  
-**Status:** R0 architecture accepted; R2 read interoperability implemented and adopted; later roadmap stages pending  
+**Status:** R0 architecture accepted; R2 focused reads adopted; R3 guarded publication adopted; R4 is next  
 **Baseline:** `repla73/stateOwl`, `main@213079f2ea2fa45e0c659339183130fd4c265226`  
 **Companions:** [Roadmap](ROADMAP.md) · [Sources and verification record](SOURCES.md)
 

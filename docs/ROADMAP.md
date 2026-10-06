@@ -1,11 +1,11 @@
 # stateOwl — Staged roadmap
 
 **Date:** 3 October 2026  
-**Status:** R0 complete · R1 complete · R2 complete and adopted · R3 next · R4–R6 pending  
+**Status:** R0 complete · R1 complete · R2 complete and adopted · R3 complete and adopted · R4 next · R5–R6 pending  
 **Design:** [Architecture decision](ARCHITECTURE-DECISION.md)  
 **Evidence:** [Sources and verification record](SOURCES.md)
 
-R0–R2 are complete, with R2 adopted on `main`. R3 is the next stage and has not started; R4–R6 remain pending. These stage labels are roadmap labels, not reserved Governance task IDs. Future implementation assignments must bind to the actual project rules and authorized targets then in force.
+R0–R3 are complete, with R2 and R3 adopted on `main`. R4 is the next stage; R5–R6 remain pending. These stage labels are roadmap labels, not reserved Governance task IDs. Future implementation assignments must bind to the actual project rules and authorized targets then in force.
 
 ## R0 — Accept the decision and close the reuse choice
 
