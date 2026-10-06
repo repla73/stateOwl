@@ -35,6 +35,7 @@
         "kind": {
           "enum": [
             "pi",
+            "openclaw",
             "hosted-mcp",
             "cross-plane"
           ]
