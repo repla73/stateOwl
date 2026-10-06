@@ -1,0 +1,67 @@
+{
+  "id": "stateowl",
+  "name": "stateOwl",
+  "description": "Exact, bounded stateOwl reads and guarded publication for OpenClaw.",
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "repository": {
+        "type": "string",
+        "minLength": 3,
+        "description": "Exact GitHub owner/repository target."
+      },
+      "namespace": {
+        "type": "string",
+        "pattern": "^refs/heads/",
+        "description": "Exact state namespace."
+      },
+      "githubToken": {
+        "type": "string",
+        "minLength": 1,
+        "description": "GitHub credential resolved by trusted OpenClaw configuration or SecretRef."
+      },
+      "publishEnabled": {
+        "type": "boolean",
+        "default": false
+      },
+      "singleStepContinuity": {
+        "type": "boolean",
+        "default": false
+      },
+      "writePaths": {
+        "type": "array",
+        "maxItems": 32,
+        "uniqueItems": true,
+        "items": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "required": [
+      "repository",
+      "namespace"
+    ]
+  },
+  "activation": {
+    "onStartup": true
+  },
+  "contracts": {
+    "tools": [
+      "stateowl_read",
+      "stateowl_publish"
+    ]
+  },
+  "configContracts": {
+    "secretInputs": {
+      "paths": [
+        {
+          "path": "githubToken",
+          "expected": "string",
+          "ownerKind": "capability"
+        }
+      ]
+    }
+  }
+}
