@@ -125,8 +125,8 @@ A conforming R4 binding:
 
 ## 8. Acceptance boundary
 
-W1 acceptance freezes this contract, schemas, fixture bytes, and profile identity.
+W1 acceptance freezes the schemas, fixture bytes, profile identity, handoff semantics, and common receipt shape. Plane-selection wording may be narrowed by an explicit founder scope decision without changing those frozen interoperability artifacts.
 
 W1 performs no live publication and installs no plane integration.
 
-Hosted binding/runtime work may be deferred without changing these shared artifacts. The native and hosted bindings must eventually consume the same contract and profile identity.
+R4 acceptance requires two materially different execution planes to consume this same contract and exact profile identity. For the founder-approved R4 qualification, the selected pair is Pi and OpenClaw. A hosted binding is optional compatibility work and may be deferred until after the core roadmap is complete. Hosted deferral does not weaken or reinterpret R2/R3 semantics and does not change the R4 handoff/profile fixture identity.
