@@ -24,3 +24,11 @@ test("Pi binding keeps publication fail-closed and scoped", () => {
   assert.match(source, /TrustedProjectValidationBoundary/);
   assert.match(source, /ExactTargetReadProvider/);
 });
+
+test("Pi binding records qualification metrics outside model-facing content", () => {
+  assert.match(source, /provider_operations/);
+  assert.match(source, /requested_state_paths/);
+  assert.match(source, /model_visible_request_bytes/);
+  assert.match(source, /model_visible_result_bytes/);
+  assert.match(source, /details:\s*\{/);
+});
