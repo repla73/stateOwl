@@ -7,6 +7,7 @@ import hashlib
 import json
 from pathlib import Path
 import unittest
+from unittest.mock import patch
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -68,9 +69,9 @@ BASE = {
 }
 
 
-def ident(actor):
+def ident(actor, timezone="+0000"):
     instant = datetime.fromisoformat(actor["date"].replace("Z", "+00:00"))
-    return f'{actor["name"]} <{actor["email"]}> {int(instant.timestamp())} +0000'
+    return f'{actor["name"]} <{actor["email"]}> {int(instant.timestamp())} {timezone}'
 
 
 def commit_payload(
@@ -79,13 +80,19 @@ def commit_payload(
     api_message: str | None = None,
     tree: str = TREE,
     parents: list[str] | None = None,
+    author_zone: str = "+0000",
+    committer_zone: str = "+0000",
+    author=None,
+    committer=None,
 ):
     parent_list = [A_RAW] if parents is None else parents
+    author = copy.deepcopy(author or AUTHOR)
+    committer = copy.deepcopy(committer or COMMITTER)
     body = (
         f"tree {tree}\n"
         + "".join(f"parent {parent}\n" for parent in parent_list)
-        + f"author {ident(AUTHOR)}\n"
-        + f"committer {ident(COMMITTER)}\n\n"
+        + f"author {ident(author, author_zone)}\n"
+        + f"committer {ident(committer, committer_zone)}\n\n"
         + raw_message
     ).encode("utf-8")
     sha = hashlib.sha1(b"commit " + str(len(body)).encode("ascii") + b"\0" + body).hexdigest()
@@ -94,8 +101,8 @@ def commit_payload(
         "message": raw_message if api_message is None else api_message,
         "tree": {"sha": tree},
         "parents": [{"sha": parent} for parent in parent_list],
-        "author": copy.deepcopy(AUTHOR),
-        "committer": copy.deepcopy(COMMITTER),
+        "author": author,
+        "committer": committer,
         "verification": {
             "verified": False,
             "reason": "unsigned",
@@ -135,7 +142,16 @@ class CallbackTransport:
         return self.callback(call)
 
 
-class ReconcileStorage(GitHubPublicationStorage):
+class NarrowGitHubPublicationStorage(GitHubPublicationStorage):
+    def __init__(self, *args, zones=("+0000",), **kwargs):
+        self._zones = tuple(dict.fromkeys(zones))
+        super().__init__(*args, **kwargs)
+
+    def _git_timezone_hypotheses(self):
+        return tuple((zone, zone.encode("ascii")) for zone in self._zones)
+
+
+class ReconcileStorage(NarrowGitHubPublicationStorage):
     def __init__(self, *, payload, old, candidate):
         self.payload_for_commit = payload
         self.head = "git:sha1:" + payload["sha"]
@@ -163,7 +179,7 @@ class ReconcileStorage(GitHubPublicationStorage):
         return copy.deepcopy(self.trees[snapshot])
 
 
-class PreAdmissionStorage(GitHubPublicationStorage):
+class PreAdmissionStorage(NarrowGitHubPublicationStorage):
     def __init__(self, payload):
         self.created_payload = payload
         self.admission_attempted = False
@@ -194,19 +210,20 @@ class PreAdmissionStorage(GitHubPublicationStorage):
 
 
 class GitHubReceiptProofTests(unittest.TestCase):
-    def provider(self, payload):
+    def provider(self, payload, zones=("+0000",)):
         transport = CallbackTransport(
             lambda call: HTTPResponse(200, copy.deepcopy(payload), {})
             if call["method"] == "GET"
             else HTTPResponse(201, copy.deepcopy(payload), {})
         )
-        return GitHubPublicationStorage(
+        return NarrowGitHubPublicationStorage(
             owner="fixture",
             repository="project",
             token="test-token",
             target=TARGET,
             repository_node_id="R_fixture",
             transport=transport,
+            zones=zones,
         )
 
     def test_exact_receipt_with_normalized_api_echo(self):
@@ -306,6 +323,155 @@ class GitHubReceiptProofTests(unittest.TestCase):
             copy.deepcopy(CAPABILITIES),
         ).run(json.dumps(req, separators=(",", ":")).encode("utf-8"))
         self.assertEqual((result["outcome"], result["error"]["code"]), ("indeterminate", "INVALID_SOURCE"))
+
+
+    def test_timezone_hypotheses_cover_utc_positive_negative_and_independent_actors(self):
+        req = request()
+        exact = receipt_message(req)
+        for author_zone, committer_zone in (
+            ("+0000", "+0000"),
+            ("+0545", "+0545"),
+            ("-0330", "-0330"),
+            ("+0300", "-0700"),
+        ):
+            with self.subTest(author=author_zone, committer=committer_zone):
+                payload = commit_payload(
+                    exact,
+                    api_message=exact[:-1],
+                    author_zone=author_zone,
+                    committer_zone=committer_zone,
+                )
+                zones = tuple(dict.fromkeys((author_zone, committer_zone, "+0000", "+0015")))
+                proof = self.provider(payload, zones=zones)._exact_commit_proof(payload, payload["sha"])
+                self.assertEqual(proof, (exact, author_zone, committer_zone))
+
+    def test_wrong_timezone_hypotheses_are_rejected_by_oid(self):
+        req = request()
+        exact = receipt_message(req)
+        payload = commit_payload(
+            exact,
+            api_message=exact[:-1],
+            author_zone="+0300",
+            committer_zone="+0300",
+        )
+        with self.assertRaises(PublicationFault) as caught:
+            self.provider(payload, zones=("+0000", "-0500"))._exact_commit_proof(payload, payload["sha"])
+        self.assertEqual(caught.exception.code, "INTEGRITY_MISMATCH")
+
+    def test_ambiguous_reconstruction_fails_closed(self):
+        req = request()
+        exact = receipt_message(req)
+        payload = commit_payload(exact, api_message=exact[:-1])
+        payload["sha"] = "b" * 40
+        expected_digest = bytes.fromhex(payload["sha"])
+
+        class AlwaysMatch:
+            def update(self, value):
+                return None
+            def copy(self):
+                return self
+            def digest(self):
+                return expected_digest
+
+        provider = self.provider(payload, zones=("+0000", "+0001"))
+        with patch("stateowl.r3_github.base.hashlib.new", return_value=AlwaysMatch()):
+            with self.assertRaises(PublicationFault) as caught:
+                provider._exact_commit_proof(payload, payload["sha"])
+        self.assertEqual(caught.exception.code, "INTEGRITY_MISMATCH")
+
+    def test_frozen_w6_plus0300_replay_and_reconciliation(self):
+        fixture = json.loads(
+            (ROOT / "tests" / "fixtures" / "r3-w6-python-receipt-replay.json").read_text(encoding="utf-8")
+        )
+        req = fixture["request"]
+        raw_message = fixture["raw_message"]
+        self.assertEqual(fixture["api_message"] + "\n", raw_message)
+        self.assertEqual(len(fixture["api_message"].encode("utf-8")), 1048)
+        self.assertEqual(len(raw_message.encode("utf-8")), 1049)
+        self.assertEqual(receipt_message(req), raw_message)
+
+        payload = {
+            "sha": fixture["candidate_oid"],
+            "message": fixture["api_message"],
+            "tree": {"sha": fixture["tree_sha"]},
+            "parents": [{"sha": fixture["parent_oid"]}],
+            "author": {
+                "name": fixture["author"]["name"],
+                "email": fixture["author"]["email"],
+                "date": fixture["author"]["api_date"],
+            },
+            "committer": {
+                "name": fixture["committer"]["name"],
+                "email": fixture["committer"]["email"],
+                "date": fixture["committer"]["api_date"],
+            },
+            "verification": {
+                "verified": False,
+                "reason": "unsigned",
+                "signature": None,
+                "payload": None,
+                "verified_at": None,
+            },
+        }
+        target = req["target"]
+        old = fixture["base_state"]
+        candidate = build_candidate(req, old)
+
+        class W6Storage(GitHubPublicationStorage):
+            def __init__(self):
+                self.head = "git:sha1:" + payload["sha"]
+                self.trees = {req["expected"]["id"]: copy.deepcopy(old), self.head: copy.deepcopy(candidate)}
+                self.proof_cache = {}
+                super().__init__(
+                    owner="repla73",
+                    repository="stateowl-r3-qualification",
+                    token="test-token",
+                    target=target,
+                    repository_node_id="R_fixture",
+                    transport=CallbackTransport(self._callback),
+                )
+
+            def _callback(self, call):
+                if call["method"] == "GET" and f'/git/commits/{payload["sha"]}' in call["url"]:
+                    return HTTPResponse(200, copy.deepcopy(payload), {})
+                raise AssertionError(call)
+
+            def _exact_commit_proof(self, value, expected_sha):
+                if expected_sha not in self.proof_cache:
+                    self.proof_cache[expected_sha] = super()._exact_commit_proof(value, expected_sha)
+                return self.proof_cache[expected_sha]
+
+            def resolve(self, value):
+                self._target(value)
+                return self.head
+
+            def tree(self, value, snapshot):
+                self._target(value)
+                return copy.deepcopy(self.trees[snapshot])
+
+        storage = W6Storage()
+        proof = storage._exact_commit_proof(payload, fixture["candidate_oid"])
+        self.assertEqual(proof[0], raw_message)
+        self.assertEqual(proof[1], fixture["author"]["raw_timezone"])
+        self.assertEqual(proof[2], fixture["committer"]["raw_timezone"])
+
+        metadata = storage.inspect(target, "git:sha1:" + fixture["candidate_oid"])
+        self.assertEqual(metadata["message"], raw_message)
+        self.assertEqual(metadata["tree"], "git:sha1:" + fixture["tree_sha"])
+        self.assertEqual(metadata["parents"], [req["expected"]["id"]])
+
+        trusted = StaticTrustedProjectValidation(
+            target=target,
+            validation=req["validation"],
+            validator=lambda old_state, new_state: True,
+        )
+        result = Publisher(
+            CompositePublicationProvider(trusted, storage),
+            copy.deepcopy(CAPABILITIES),
+        ).run(json.dumps(req, separators=(",", ":")).encode("utf-8"))
+        self.assertEqual(result["outcome"], "committed")
+        self.assertEqual(result["snapshot"], {"id": "git:sha1:" + fixture["candidate_oid"]})
+
 
 
 if __name__ == "__main__":
