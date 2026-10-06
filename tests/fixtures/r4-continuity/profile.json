@@ -1,0 +1,1 @@
+{"profile":"stateowl.r4-continuity/1","protocol":"stateowl/0.2-draft.3","records":[{"key":"task","path":"state/task.json","format":"json"},{"key":"work","path":"state/work.json","format":"json"}],"transition":{"kind":"integer-step","work_path":"state/work.json","field":"step","sequence":[0,1,2]}}
