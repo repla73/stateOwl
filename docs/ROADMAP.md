@@ -1,11 +1,11 @@
 # stateOwl — Staged roadmap
 
 **Date:** 3 October 2026  
-**Status:** R0 complete · R1 complete · R2 complete and adopted · R3 complete and adopted · R4 next · R5–R6 pending  
+**Status:** R0 complete · R1 complete · R2 complete and adopted · R3 complete and adopted · R4 complete and adopted · R5 next · R6 pending  
 **Design:** [Architecture decision](ARCHITECTURE-DECISION.md)  
 **Evidence:** [Sources and verification record](SOURCES.md)
 
-R0–R3 are complete, with R2 and R3 adopted on `main`. R4 is the next stage; R5–R6 remain pending. These stage labels are roadmap labels, not reserved Governance task IDs. Future implementation assignments must bind to the actual project rules and authorized targets then in force.
+R0–R4 are complete, with R2–R4 adopted on `main`. R5 is the next stage; R6 remains pending. These stage labels are roadmap labels, not reserved Governance task IDs. Future implementation assignments must bind to the actual project rules and authorized targets then in force.
 
 ## R0 — Accept the decision and close the reuse choice
 
@@ -62,6 +62,8 @@ R0–R3 are complete, with R2 and R3 adopted on `main`. R4 is the next stage; R5
 **Boundary.** Live writes only in an explicitly authorized disposable fixture repository/namespace. Do not use production state, create apps or provision hosts merely because the roadmap mentions qualification.
 
 ## R4 — Demonstrate real cross-plane continuity
+
+**Completion evidence (7 October 2026).** R4 is accepted by final independent audit issue #5: Pi execution PASS, fresh OpenClaw execution PASS, guarded GitHub publication evidence PASS, zero-readmission reconciliation PASS, independent-session/credential boundaries PASS, and R2/R3 semantics preserved. Accepted contract subject: `251e626082317f11c5e96bf53dc9557bcf9d63d3`; accepted Pi binding: `729686b9f163864f8a9630d5bd8ffb716fbab174`; qualification head: `75fc3dd275377c8ad608f9205902bef44d04281f`. Founder clarification made the experimental OpenClaw plugin unnecessary for R4 acceptance; its source is not part of this adopted R4 tree.
 
 **Purpose.** Show that the contract survives materially different execution environments.
 

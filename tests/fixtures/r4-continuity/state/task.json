@@ -1,0 +1,1 @@
+{"fixture":"stateowl.r4-continuity/1","task":"advance-work-step","work_path":"state/work.json","transitions":[{"from":0,"to":1,"put":{"encoding":"utf8","data":"{\"step\":1}\n"}},{"from":1,"to":2,"put":{"encoding":"utf8","data":"{\"step\":2}\n"}}],"complete_at":2}

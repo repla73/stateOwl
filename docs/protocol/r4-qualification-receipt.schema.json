@@ -1,0 +1,148 @@
+{
+  "$id": "https://stateowl.dev/schema/r4-qualification-receipt-1.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "authentication": {
+      "additionalProperties": false,
+      "properties": {
+        "boundary": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "credential_value_recorded": {
+          "const": false
+        },
+        "source": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "source",
+        "credential_value_recorded",
+        "boundary"
+      ],
+      "type": "object"
+    },
+    "basis": {
+      "pattern": "^[0-9a-f]{40}$",
+      "type": "string"
+    },
+    "binding": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "pi",
+            "openclaw",
+            "hosted-mcp",
+            "cross-plane"
+          ]
+        },
+        "stateowl_subject": {
+          "pattern": "^[0-9a-f]{40}$",
+          "type": "string"
+        },
+        "subject": {
+          "pattern": "^[0-9a-f]{40}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "subject",
+        "stateowl_subject"
+      ],
+      "type": "object"
+    },
+    "capabilities": {
+      "type": "object"
+    },
+    "evidence": {
+      "additionalProperties": false,
+      "properties": {
+        "authentication_steps": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "cold_steps": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "model_tool_calls": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "model_visible_request_bytes": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "model_visible_result_bytes": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "provider_operations": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "requested_paths": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "unrelated_paths": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "model_tool_calls",
+        "model_visible_request_bytes",
+        "model_visible_result_bytes",
+        "provider_operations",
+        "requested_paths",
+        "unrelated_paths",
+        "cold_steps",
+        "authentication_steps"
+      ],
+      "type": "object"
+    },
+    "format": {
+      "const": "stateowl.r4-qualification-receipt/1"
+    },
+    "installation": {
+      "type": "object"
+    },
+    "result": {
+      "type": "object"
+    },
+    "stage": {
+      "enum": [
+        "R4-W4",
+        "R4-W5",
+        "R4-W6"
+      ]
+    }
+  },
+  "required": [
+    "format",
+    "stage",
+    "basis",
+    "binding",
+    "installation",
+    "authentication",
+    "capabilities",
+    "evidence",
+    "result"
+  ],
+  "title": "stateowl.r4-qualification-receipt/1",
+  "type": "object"
+}
