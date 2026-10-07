@@ -9,11 +9,23 @@ from .core import (
     git_blob_oid,
 )
 from .github import GitHubStore
+from .observe import (
+    DEFAULT_OBSERVE_CAPABILITIES,
+    HMACTokenService,
+    ObserveInstrumentation,
+    ObserveTokenService,
+    Observer,
+)
 
 __all__ = [
+    "DEFAULT_OBSERVE_CAPABILITIES",
     "FileObject",
     "GitHubStore",
+    "HMACTokenService",
     "Locator",
+    "ObserveInstrumentation",
+    "ObserveTokenService",
+    "Observer",
     "Reader",
     "StateOwlError",
     "StateStore",

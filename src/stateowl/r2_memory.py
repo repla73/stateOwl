@@ -6,7 +6,7 @@ class MemoryReadProvider:
  def __init__(self,target,objects,head=None,algorithm=None):self.target=copy.deepcopy(target);self.objects=copy.deepcopy(objects);self.head=head;self.algorithm=algorithm;self.calls=Counter();self.returned_bytes=0
  def chk(self,t):
   if dict(t)!=self.target:raise ReadFault('FORBIDDEN')
- def access(self,t,o):self.calls['access']+=1;self.chk(t);return {'auth_scope':'memory-read'} if o=='read' else (_ for _ in()).throw(ReadFault('UNSUPPORTED_CAPABILITY'))
+ def access(self,t,o):self.calls['access']+=1;self.chk(t);return {'auth_scope':'memory-read'} if o in ('read','observe') else (_ for _ in()).throw(ReadFault('UNSUPPORTED_CAPABILITY'))
  def resolve(self,t):
   self.calls['resolve']+=1;self.chk(t)
   if self.head is None:raise ReadFault('NOT_FOUND')
