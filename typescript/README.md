@@ -1,39 +1,27 @@
-# stateOwl R2 TypeScript reader
+# Independent TypeScript stateOwl implementation
 
-Independent TypeScript implementation of the read semantics in `stateowl/0.2-draft.3` and the Git read rules accompanying `stateowl.git-receipt/2`.
+**Package source:** `@stateowl/reader@0.2.0-draft.3` (still prerelease; **not** a published npm package). **Normative protocol:** `stateowl/0.2-draft.3`; Git receipt `stateowl.git-receipt/2`. No change to either contract is implied by Python source version 0.2.0.
 
-## Scope
+## Implementation and evidence
 
-- exact and current reads;
-- batched selections and direct paths;
-- `stateowl.router/v1` compatibility and one-level expansion;
-- SHA-1/SHA-256 Git identities and annotated-tag peeling;
-- opaque non-Git snapshots through the in-memory semantic provider;
-- read-only local Git and GitHub providers;
-- strict UTF-8/JSON/base64/number handling and raw-byte SHA-256 provenance;
-- the six frozen 0.1.0 legacy read goldens.
+R2 independent TypeScript `Reader`: exact/current/batched/direct reads, legacy `stateowl.router/v1`, native `.state`, strict UTF-8/JSON/JCS/base64, SHA-1/SHA-256 Git identity, annotated tags, opaque in-memory non-Git semantics and six frozen legacy goldens. In-memory, real local Git and GitHub read providers are present, without a Python subprocess.
 
-This candidate contains no publication/write path, server, daemon, MCP binding, agent SDK, database, or web framework. It does not invoke Python or depend on the Python stateOwl runtime.
+R3 `Publisher`: guarded GitHub and local-Git publication, receipt verification and bounded reconciliation. **Trusted project validation, path authorization, single-step namespace continuity and retention are external prerequisites.** A provider does not enforce exclusivity against arbitrary GitHub writers. See [R3 integration evidence](../docs/R3-INTEGRATION.md).
 
-## Commands
+R4 Pi extension is [documented separately](../bindings/pi/README.md) and qualified in one controlled environment. Python R5 optional observe is **not** a TypeScript feature. R5 pre-model gate and disposable effect target are qualification-only.
+
+## Reproduce
+
+From `typescript/` in a fresh exact-source checkout:
 
 ```sh
+npm install
 npm run build
 npm test
 npm run conformance
 npm run benchmark
 ```
 
-`npm run conformance` consumes the language-neutral normative corpus at `../docs/protocol/{fixtures,read-cases}.json`; it executes this TypeScript reader, not the Python harness implementation.
+`npm install` provides the **development-only** TypeScript compiler (no runtime npm dependencies). Applicable local-Git tests also need Git. No mandatory Node version pin is imposed; [historical R2 tested versions](QUALIFICATION.md) are observations, not general support certification. See [R6 reproduction](../docs/R6-REPRODUCTION.md) for cross-language differential tests, identical fixture benchmarks and scope restrictions.
 
-## Providers
-
-`MemoryProvider` is an opaque-ID-capable semantic provider used for conformance and non-Git proof. `LocalGitProvider` uses Git object/ref commands and does not switch or modify the product worktree. `GitHubReadProvider` uses read-only GitHub API transport calls and exposes no write API.
-
-## Runtime
-
-No runtime package dependencies are required. Node.js provides JSON/UTF-8/crypto/fetch primitives. The local Git provider additionally requires the `git` executable. No `engines` restriction is imposed by this draft; the qualification run records the versions actually tested.
-
-## Known protocol input gap
-
-The frozen R2 basis does not contain the sanitized native `.state` fixture/profile that the architecture requires before native Governance compatibility can be claimed. The implementation therefore does not invent Governance routing semantics. See `PROTOCOL-AMBIGUITIES.md`.
+No stable npm package, hosted service, mandatory MCP server, durable non-Git storage, or OpenClaw plugin is shipped from this directory.

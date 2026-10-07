@@ -1,8 +1,8 @@
 # Protocol and conformance — draft 3
 
 **Protocol:** `stateowl/0.2-draft.3`  
-**Status:** Draft; R1 protocol accepted; R2 read interoperability qualified and adopted; R3 guarded publication qualified and adopted. Not a stable release.  
-**Scope:** R1 protocol/conformance accepted; R2 read interoperability adopted; R3 local-Git and GitHub guarded publication qualified and adopted. R4 hosted/native cross-plane continuity is next.
+**Status:** The normative protocol remains **draft-3**, unchanged. R1–R5 stage evidence has been independently accepted and adopted; this file's wire ID is **not** a stable future protocol designation.  
+**Scope:** Python R6 source metadata designates only the legacy-compatible reader/CLI stable surface. Qualified Python/TypeScript draft-3 readers, conditional publication, Pi execution and optional Python observe are in the [R6 matrix](../R6-CAPABILITY-MATRIX.md).
 
 ## Contract
 
@@ -45,4 +45,4 @@ The corrected corpus retains the original 162 scenarios with version/identity up
 
 ## Boundary
 
-The protocol remains `stateowl/0.2-draft.3` and is not a stable release. R1 protocol/conformance is accepted; R2 read interoperability is adopted; R3 local-Git and GitHub guarded publication is qualified and adopted. The Charter, package version, protocol semantics, original tests and legacy goldens remain unchanged by this status sync. R4 hosted/native cross-plane continuity is next; automation remains a later gate.
+The protocol remains `stateowl/0.2-draft.3` and is **not** a stable wire release. Its semantics, original fixtures and legacy goldens are unchanged in R6. R2 exact reads, R3 guarded publication, R4 controlled Pi/OpenClaw execution and R5 optional Python observe have bounded accepted evidence, with the limits stated in the [R6 matrix](../R6-CAPABILITY-MATRIX.md). These files are published in source, not in a separately authorized registry artifact.
