@@ -15,5 +15,8 @@
     "test": "npm run build && node --test dist/test/*.test.js",
     "conformance": "npm run build && node dist/test/conformance.js",
     "benchmark": "npm run build && node dist/benchmarks/read-benchmark.js"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3"
   }
 }

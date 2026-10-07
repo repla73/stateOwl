@@ -1,11 +1,11 @@
 # stateOwl — Staged roadmap
 
-**Date:** 3 October 2026  
-**Status:** R0 complete · R1 complete · R2 complete and adopted · R3 complete and adopted · R4 complete and adopted · R5 next · R6 pending  
+**Updated:** 7 October 2026  
+**R6-tree completion disposition:** R0–R6 complete **when this exact tree passes independent final audit and is adopted cleanly onto main**. R0–R5 are already complete/adopted.  
 **Design:** [Architecture decision](ARCHITECTURE-DECISION.md)  
 **Evidence:** [Sources and verification record](SOURCES.md)
 
-R0–R4 are complete, with R2–R4 adopted on `main`. R5 is the next stage; R6 remains pending. These stage labels are roadmap labels, not reserved Governance task IDs. Future implementation assignments must bind to the actual project rules and authorized targets then in force.
+R0–R5 are complete. R5 passed independent final audit issue #12 and was adopted on `main@e3f5b1224fd3def7ab4933f0f85bfc0a5aa1e192`. R6 closes the roadmap only after an independent PASS on its exact candidate and guarded, exact-tree clean main adoption. These stages are not reserved Governance task IDs.
 
 ## R0 — Accept the decision and close the reuse choice
 
@@ -79,7 +79,7 @@ R0–R4 are complete, with R2–R4 adopted on `main`. R5 is the next stage; R6 r
 
 ## R5 — Prove automation and recovery
 
-**Completion candidate status (7 October 2026).** Qualification is complete and independently accepted through W2; the exact final tree remains pending the separate final R5 audit and clean main adoption. After adoption, project status is **R5 complete/adopted · R6 next**.
+**Final R5 status (7 October 2026).** Completed, independently accepted (final issue #12, PASS), cleanly adopted at `main@e3f5b1224fd3def7ab4933f0f85bfc0a5aa1e192`. R6 is the release-closure stage, not a reason to reopen R5.
 
 **Accepted implementation subject.** `299debe53567d3558a17f8b32f965e60fc678c87`. Independent W1 audit: issue #10, PASS, findings none. Real W3 qualification: issue #11, PASS on `aphenon-tokyo` with Python 3.12.3, Git 2.43.0 and OpenClaw 2026.9.8 as the execution environment only.
 
@@ -97,6 +97,8 @@ R0–R4 are complete, with R2–R4 adopted on `main`. R5 is the next stage; R6 r
 **Acceptance.** State conflicts, duplicate work and duplicate effects are handled as different problems. No unknown response becomes an automatic repeat. A stale worker is fenced only where the target actually enforces fencing. Other non-idempotent cases reconcile or stop for authorization. No new stateOwl scheduler or task engine is introduced.
 
 ## R6 — Release a stable, evidence-backed capability set
+
+**Release completion artifacts:** [supported/qualified matrix](R6-CAPABILITY-MATRIX.md), [reproducible tests/benchmarks](R6-REPRODUCTION.md), [migration](R6-MIGRATION.md), [source manifest](R6-RELEASE-MANIFEST.md). These are prepared source artifacts, not a published package or registry release. After non-authoring final PASS and exact-tree main adoption, the roadmap disposition is **R0–R6 complete**. Public tagging remains separately authorized.
 
 **Purpose.** Stabilize demonstrated behavior, not the largest feature list.
 

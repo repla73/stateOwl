@@ -32,4 +32,4 @@ __all__ = [
     "git_blob_oid",
 ]
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"

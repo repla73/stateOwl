@@ -4,15 +4,15 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "stateowl"
-version = "0.1.0"
-description = "Focused, provenance-preserving GitHub state reads for AI agents."
+version = "0.2.0"
+description = "Focused, provenance-preserving project state reads for agents."
 readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"
 authors = [{name = "stateOwl contributors"}]
 keywords = ["github", "agents", "context", "state", "llm"]
 classifiers = [
-  "Development Status :: 3 - Alpha",
+  "Development Status :: 4 - Beta",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
