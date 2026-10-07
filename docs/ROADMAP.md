@@ -79,6 +79,13 @@ R0–R4 are complete, with R2–R4 adopted on `main`. R5 is the next stage; R6 r
 
 ## R5 — Prove automation and recovery
 
+**Completion candidate status (7 October 2026).** Qualification is complete and independently accepted through W2; the exact final tree remains pending the separate final R5 audit and clean main adoption. After adoption, project status is **R5 complete/adopted · R6 next**.
+
+**Accepted implementation subject.** `299debe53567d3558a17f8b32f965e60fc678c87`. Independent W1 audit: issue #10, PASS, findings none. Real W3 qualification: issue #11, PASS on `aphenon-tokyo` with Python 3.12.3, Git 2.43.0 and OpenClaw 2026.9.8 as the execution environment only.
+
+**Qualification evidence.** Full suite 92/92 and explicit R5 tests 15/15 passed. The 1,000 unchanged/not-due loop returned 1,000 `idle` decisions with zero model invocations, zero state publications and zero external effects. Same-head deadline eligibility, duplicate/missing/out-of-order wakes, competing claimants, single guarded claim admission, expiry/takeover, credential/provider/token/continuity faults, lost-publication-response reconciliation with zero additional admissions, restart recovery, target-side duplicate effect suppression and operator escalation for unknown effect outcome all passed. No remote test repository, PAT, OpenClaw configuration change, scheduler, daemon, database or generic workflow engine was required.
+
+
 **Purpose.** Make unattended continuation inexpensive and safe under interruption.
 
 **Deliverable.** Optional observation capability, a deterministic pre-model gate in an existing executor, and one project-specific eligibility/claim/effect integration. Include restart and operator-escalation behavior.
