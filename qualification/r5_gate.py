@@ -87,6 +87,10 @@ class QualificationGate:
                 self.next_due = expires_at
                 return GateDecision("idle", "claimed-by-other", snapshot, self.next_due, False)
             if owner != self.claimant and now >= expires_at:
-                return GateDecision("eligible", "expired-claim-takeover-candidate", snapshot, due_at, True)
+                return GateDecision("eligible", "expired-claim-takeover-candidate", snapshot, due_at, False)
+            if owner == self.claimant and now >= expires_at:
+                return GateDecision("eligible", "claim-renewal-required", snapshot, due_at, False)
+            if owner == self.claimant:
+                return GateDecision("eligible", "claim-owned", snapshot, due_at, True)
 
-        return GateDecision("eligible", "due", snapshot, due_at, True)
+        return GateDecision("eligible", "claim-acquisition-required", snapshot, due_at, False)

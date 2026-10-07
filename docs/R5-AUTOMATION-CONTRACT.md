@@ -59,7 +59,7 @@ The deterministic pre-model decision is:
 
 `event/scheduled check → observe → machine-only eligibility/deadline read when required → idle | eligible | blocked/error | operator_required`
 
-`eligible` is only permission to continue to project claim acquisition/work. Two claimants that become eligible from the same state race through guarded state publication; only the admitted claimant may invoke model work. A stale claimant must re-read ownership before any external effect.
+`eligible` is permission to continue the project-specific claim step. When no live claim is already owned by the claimant, `model_allowed` remains false. Two claimants that become eligible from the same state race through guarded state publication; only the admitted claimant rechecks the profile, receives `claim-owned` with `model_allowed:true`, and may invoke model work. A stale or expired claimant must re-read ownership before any external effect.
 
 ## External effect fixture
 

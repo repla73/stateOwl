@@ -59,7 +59,8 @@ class GateTests(unittest.TestCase):
         self.assertEqual(due.decision, "eligible")
         self.assertEqual(before.snapshot, due.snapshot)
         self.assertFalse(before.model_allowed)
-        self.assertTrue(due.model_allowed)
+        self.assertFalse(due.model_allowed)
+        self.assertEqual(due.reason, "claim-acquisition-required")
 
     def test_duplicate_and_out_of_order_wakes_do_not_create_work(self):
         feed = Feed()
@@ -83,6 +84,18 @@ class GateTests(unittest.TestCase):
         expired = gate.check(300)
         self.assertEqual(expired.decision, "eligible")
         self.assertEqual(expired.reason, "expired-claim-takeover-candidate")
+        self.assertFalse(expired.model_allowed)
+
+        owned_feed = Feed()
+        owned = QualificationGate(
+            observe=owned_feed,
+            read_profile=lambda snapshot: profile(due_at=100, claim={"owner": "worker-a", "expires_at": 400}),
+            claimant="worker-a",
+        )
+        admitted = owned.check(300)
+        self.assertEqual(admitted.decision, "eligible")
+        self.assertTrue(admitted.model_allowed)
+        self.assertEqual(admitted.reason, "claim-owned")
 
     def test_unknown_effect_requires_operator_and_observe_error_blocks(self):
         feed = Feed()
