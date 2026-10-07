@@ -35,7 +35,7 @@ No stateOwl scheduler, daemon, database, generic workflow engine or mandatory al
 
 Execution environment:
 
-- host: `aphenon-tokyo`
+- host: `[redacted private execution host]`
 - Python: `3.12.3` using the project virtual environment
 - Git: `2.43.0`
 - OpenClaw: `2026.9.8`, used only as the headless execution environment

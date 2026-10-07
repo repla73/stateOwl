@@ -81,7 +81,7 @@ R0–R5 are complete. R5 passed independent final audit issue #12 and was adopte
 
 **Final R5 status (7 October 2026).** Completed, independently accepted (final issue #12, PASS), cleanly adopted at `main@e3f5b1224fd3def7ab4933f0f85bfc0a5aa1e192`. R6 is the release-closure stage, not a reason to reopen R5.
 
-**Accepted implementation subject.** `299debe53567d3558a17f8b32f965e60fc678c87`. Independent W1 audit: issue #10, PASS, findings none. Real W3 qualification: issue #11, PASS on `aphenon-tokyo` with Python 3.12.3, Git 2.43.0 and OpenClaw 2026.9.8 as the execution environment only.
+**Accepted implementation subject.** `299debe53567d3558a17f8b32f965e60fc678c87`. Independent W1 audit: issue #10, PASS, findings none. Real W3 qualification: issue #11, PASS in a qualified execution environment with Python 3.12.3, Git 2.43.0 and OpenClaw 2026.9.8 as the execution environment only.
 
 **Qualification evidence.** Full suite 92/92 and explicit R5 tests 15/15 passed. The 1,000 unchanged/not-due loop returned 1,000 `idle` decisions with zero model invocations, zero state publications and zero external effects. Same-head deadline eligibility, duplicate/missing/out-of-order wakes, competing claimants, single guarded claim admission, expiry/takeover, credential/provider/token/continuity faults, lost-publication-response reconciliation with zero additional admissions, restart recovery, target-side duplicate effect suppression and operator escalation for unknown effect outcome all passed. No remote test repository, PAT, OpenClaw configuration change, scheduler, daemon, database or generic workflow engine was required.
 
